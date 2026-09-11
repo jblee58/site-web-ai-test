@@ -1,526 +1,443 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sunty - Interface IA Intelligente</title>
-  <meta name="description" content="SuntyAI 1.0 - Interface IA Intelligente & Multimodale créée et développée par SuntyraXx.">
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
+  <title>Sunty — SuntyAI 1.0</title>
+  <meta name="description" content="SuntyAI 1.0 — Interface IA Intelligente & Multimodale créée et développée par SuntyraXx.">
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Markdown Parser (marked) -->
+  <!-- Marked (Markdown) -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <!-- Highlight.js pour la coloration syntaxique du code -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <!-- Highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <!-- DOMPurify pour la désinfection XSS -->
+  <!-- DOMPurify -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
 
-  <!-- Feuille de style personnalisée Haute Fidélité -->
+  <!-- App CSS -->
   <link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body class="h-full bg-slate-900 text-slate-800 antialiased selection:bg-cyan-500 selection:text-white flex overflow-hidden">
+<body>
 
-  <!-- SVG Définition du Logo Gradient Fallback -->
-  <svg class="hidden">
-    <defs>
-      <linearGradient id="suntyLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#00F0FF" />
-        <stop offset="25%" stop-color="#0072FF" />
-        <stop offset="55%" stop-color="#D946EF" />
-        <stop offset="80%" stop-color="#FF416C" />
-        <stop offset="100%" stop-color="#FF9900" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <!-- ═══════════════════════════════════════════════════════════
+       1. SIDEBAR GAUCHE
+  ═══════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-content">
 
-  <!-- ================= 1. SIDEBAR GAUCHE (SOMBRE & NÉON) ================= -->
-  <aside class="w-72 bg-aurora-sidebar flex flex-col justify-between border-r border-white/10 z-20 relative shrink-0">
-    <div class="p-4 relative z-10 flex flex-col h-full overflow-hidden">
-      
-      <!-- Top Logo Sunty Officiel & Badge Pro -->
-      <div class="flex items-center justify-between mb-5 px-1">
-        <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('accueil')">
-          <!-- Logo Sunty Officiel 3D (Image haute fidélité) -->
-          <div class="w-9 h-9 flex items-center justify-center shrink-0 drop-shadow-[0_0_15px_rgba(0,240,255,0.7)] hover:scale-105 transition">
-            <img src="/assets/sunty-logo.png" alt="Sunty Logo" class="w-full h-full object-contain rounded-xl">
-          </div>
-          <span class="text-2xl font-black tracking-tight text-white drop-shadow-md group-hover:text-cyan-300 transition">Sunty</span>
+      <!-- Logo + Badge -->
+      <div class="sidebar-logo">
+        <div class="logo-img-wrap" onclick="switchTab('accueil')">
+          <img src="/assets/sunty-logo.png" alt="Sunty" onerror="this.parentElement.innerHTML='<svg viewBox=\'0 0 100 100\' width=\'28\' height=\'28\' fill=\'none\'><path d=\'M72 26C72 14 44 12 30 24C12 38 18 58 44 58C74 58 84 76 68 90C50 104 22 92 22 78\' stroke=\'white\' stroke-width=\'16\' stroke-linecap=\'round\'/></svg>'">
         </div>
-
-        <!-- Badge Pro Dropdown (Ouvre les paramètres réels) -->
-        <button onclick="openSettingsModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition shadow-[0_0_10px_rgba(251,191,36,0.2)] active:scale-95">
-          <span>👑 Pro</span>
-          <i data-lucide="chevron-down" class="w-3 h-3"></i>
-        </button>
+        <div>
+          <div class="logo-name">Sunty</div>
+          <div class="logo-version">SuntyAI 1.0</div>
+        </div>
+        <button class="badge-pro" onclick="openSettingsModal()">Pro ✦</button>
       </div>
 
-      <!-- Bouton Vibrant Nouveau Chat -->
-      <button onclick="startNewChat()" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-95 transition shadow-[0_0_25px_rgba(0,240,255,0.4)] mb-5 active:scale-98 group">
-        <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center group-hover:rotate-180 transition duration-500">
-          <i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i>
+      <!-- Nouveau Chat -->
+      <button class="btn-new-chat" id="new-chat-btn" onclick="startNewChat()">
+        <div class="icon-wrap">
+          <i data-lucide="plus" style="width:13px;height:13px;color:#fff"></i>
         </div>
         <span>Nouveau chat</span>
-        <i data-lucide="plus" class="w-4 h-4 ml-auto text-white/80"></i>
+        <i data-lucide="edit-3" style="width:13px;height:13px;margin-left:auto;color:#71717a"></i>
       </button>
 
-      <!-- Menu Principal Navigation (Avec états actifs dynamiques conformes à l'image 3) -->
-      <nav id="sidebar-nav" class="space-y-1 mb-4 text-slate-300 text-sm font-medium">
-        <a href="#" onclick="switchTab('accueil')" class="nav-item nav-item-active flex items-center gap-3 px-3 py-2.5 rounded-xl transition" data-tab="accueil">
-          <i data-lucide="home" class="w-4 h-4 text-cyan-400"></i>
+      <!-- Navigation principale -->
+      <div class="nav-section">Navigation</div>
+      <nav id="sidebar-nav">
+        <a class="nav-link active" data-tab="accueil" onclick="switchTab('accueil')" href="#">
+          <i data-lucide="home" style="width:15px;height:15px;flex-shrink:0"></i>
           <span>Accueil</span>
         </a>
-        <a href="#" onclick="switchTab('recents')" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="recents">
-          <div class="flex items-center gap-3">
-            <i data-lucide="message-square" class="w-4 h-4"></i>
-            <span>Chats récents</span>
-          </div>
-          <span id="recent-chats-badge" class="px-2 py-0.5 rounded-full bg-blue-500/30 border border-blue-400/40 text-[11px] text-blue-200 font-bold">0</span>
+        <a class="nav-link" data-tab="recents" onclick="switchTab('recents')" href="#">
+          <i data-lucide="message-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+          <span>Chats récents</span>
+          <span class="nav-badge" id="recent-chats-badge">0</span>
         </a>
-        <a href="#" onclick="switchTab('projets')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="projets">
-          <i data-lucide="folder" class="w-4 h-4"></i>
+        <a class="nav-link" data-tab="projets" onclick="switchTab('projets')" href="#">
+          <i data-lucide="folder-open" style="width:15px;height:15px;flex-shrink:0"></i>
           <span>Mes projets</span>
         </a>
-        <a href="#" onclick="switchTab('bibliotheque')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="bibliotheque">
-          <i data-lucide="database" class="w-4 h-4"></i>
+        <a class="nav-link" data-tab="bibliotheque" onclick="switchTab('bibliotheque')" href="#">
+          <i data-lucide="library" style="width:15px;height:15px;flex-shrink:0"></i>
           <span>Bibliothèque</span>
         </a>
-        <a href="#" onclick="switchTab('outils')" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="outils">
-          <div class="flex items-center gap-3">
-            <i data-lucide="grid" class="w-4 h-4"></i>
-            <span>Outils</span>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+        <a class="nav-link" data-tab="outils" onclick="switchTab('outils')" href="#">
+          <i data-lucide="grid-3x3" style="width:15px;height:15px;flex-shrink:0"></i>
+          <span>Outils</span>
         </a>
-        <a href="#" onclick="openSettingsModal()" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="parametres">
-          <div class="flex items-center gap-3">
-            <i data-lucide="settings" class="w-4 h-4"></i>
-            <span>Paramètres</span>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+        <a class="nav-link" onclick="openSettingsModal()" href="#">
+          <i data-lucide="settings" style="width:15px;height:15px;flex-shrink:0"></i>
+          <span>Paramètres</span>
         </a>
       </nav>
 
-      <!-- Section Espaces (Fonctionnels) -->
-      <div class="flex-1 overflow-y-auto pr-1 space-y-1">
-        <div class="flex items-center justify-between px-3 mb-2">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Espaces</span>
-          <button onclick="showToast('Nouvel espace créé')" class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 transition">
-            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-          </button>
-        </div>
-
-        <a href="#" onclick="selectEspace('Personnel')" class="espace-item bg-white/15 border-cyan-400/40 flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white text-xs transition group border border-transparent" data-espace="Personnel">
-          <div class="flex items-center gap-2.5">
-            <div class="w-6 h-6 rounded-lg bg-indigo-500/30 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
-              <i data-lucide="user" class="w-3.5 h-3.5"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="font-semibold text-slate-200 group-hover:text-white">Personnel</span>
-              <span class="text-[10px] text-slate-400">Mon espace principal</span>
-            </div>
+      <!-- Espaces -->
+      <div class="nav-section" style="margin-top:16px">Espaces</div>
+      <div class="recent-list" id="espaces-nav">
+        <a class="espace-item active" data-espace="Personnel" onclick="selectEspace('Personnel')" href="#">
+          <div class="espace-icon">👤</div>
+          <div class="espace-label">
+            <span class="espace-label-main">Personnel</span>
+            <span class="espace-label-sub">Mon espace principal</span>
           </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
+          <i data-lucide="chevron-right" style="width:12px;height:12px;color:#52525b;flex-shrink:0"></i>
+        </a>
+        <a class="espace-item" data-espace="Études" onclick="selectEspace('Études')" href="#">
+          <div class="espace-icon">📚</div>
+          <div class="espace-label">
+            <span class="espace-label-main">Études</span>
+            <span class="espace-label-sub">Projets & apprentissage</span>
+          </div>
+          <i data-lucide="chevron-right" style="width:12px;height:12px;color:#52525b;flex-shrink:0"></i>
+        </a>
+        <a class="espace-item" data-espace="Création" onclick="selectEspace('Création')" href="#">
+          <div class="espace-icon">✦</div>
+          <div class="espace-label">
+            <span class="espace-label-main">Création</span>
+            <span class="espace-label-sub">Idées et contenus</span>
+          </div>
+          <i data-lucide="chevron-right" style="width:12px;height:12px;color:#52525b;flex-shrink:0"></i>
+        </a>
+        <a class="espace-item" data-espace="Organisation" onclick="selectEspace('Organisation')" href="#">
+          <div class="espace-icon">📅</div>
+          <div class="espace-label">
+            <span class="espace-label-main">Organisation</span>
+            <span class="espace-label-sub">Tâches et planning</span>
+          </div>
+          <i data-lucide="chevron-right" style="width:12px;height:12px;color:#52525b;flex-shrink:0"></i>
         </a>
 
-        <a href="#" onclick="selectEspace('Études')" class="espace-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white text-xs transition group border border-transparent" data-espace="Études">
-          <div class="flex items-center gap-2.5">
-            <div class="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
-              <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="font-semibold text-slate-200 group-hover:text-white">Études</span>
-              <span class="text-[10px] text-slate-400">Projets & apprentissage</span>
-            </div>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
-        </a>
-
-        <a href="#" onclick="selectEspace('Création')" class="espace-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white text-xs transition group border border-transparent" data-espace="Création">
-          <div class="flex items-center gap-2.5">
-            <div class="w-6 h-6 rounded-lg bg-rose-500/30 border border-rose-400/30 flex items-center justify-center text-rose-300">
-              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="font-semibold text-slate-200 group-hover:text-white">Création</span>
-              <span class="text-[10px] text-slate-400">Idées et contenus</span>
-            </div>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
-        </a>
-
-        <a href="#" onclick="selectEspace('Organisation')" class="espace-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white text-xs transition group border border-transparent" data-espace="Organisation">
-          <div class="flex items-center gap-2.5">
-            <div class="w-6 h-6 rounded-lg bg-emerald-500/30 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
-              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="font-semibold text-slate-200 group-hover:text-white">Organisation</span>
-              <span class="text-[10px] text-slate-400">Tâches et planning</span>
-            </div>
-          </div>
-          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
-        </a>
+        <!-- Recents list inline -->
+        <div class="divider-dark" style="margin:12px 0 8px"></div>
+        <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#3f3f46;padding:0 2px;margin-bottom:4px">Récents</div>
+        <div id="recent-chats-list"></div>
       </div>
 
-      <!-- Bas de Sidebar : Carte Plan Pro / Paramètres -->
-      <div class="pt-3 mt-auto">
-        <div onclick="openSettingsModal()" class="w-full p-3 rounded-2xl bg-gradient-to-r from-blue-900/60 via-indigo-900/60 to-purple-900/60 border border-cyan-400/30 flex items-center justify-between hover:border-cyan-300 transition cursor-pointer shadow-[0_0_20px_rgba(0,240,255,0.15)] group active:scale-98">
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-fuchsia-500 to-amber-400 p-0.5 shrink-0 shadow-md">
-              <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300"></i>
-              </div>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-white group-hover:text-cyan-300 transition">Passe en plan Pro</span>
-              <span class="text-[10px] text-slate-400 leading-tight">Plus de limites, plus d'outils...</span>
-            </div>
-          </div>
-          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition"></i>
+      <!-- Bottom card -->
+      <div class="sb-bottom-card" onclick="openSettingsModal()" style="margin-top:12px">
+        <div class="sb-bottom-icon">
+          <i data-lucide="sparkles" style="width:14px;height:14px;color:#09090b"></i>
         </div>
+        <div class="sb-bottom-label">
+          <span class="sb-bottom-title">Sunty Advanced</span>
+          <span class="sb-bottom-sub">Paramètres & quotas</span>
+        </div>
+        <i data-lucide="chevron-right" style="width:14px;height:14px;color:#52525b;flex-shrink:0"></i>
       </div>
 
     </div>
   </aside>
 
 
-  <!-- ================= 2. ZONE CENTRALE (CANVAS AURORA) ================= -->
-  <main class="flex-1 bg-aurora-canvas flex flex-col h-full relative overflow-hidden z-10">
+  <!-- ═══════════════════════════════════════════════════════════
+       2. CANVAS CENTRAL
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="canvas" id="main-canvas">
+    <!-- Orbes lumineux -->
+    <div class="canvas-orb canvas-orb-1"></div>
+    <div class="canvas-orb canvas-orb-2"></div>
+    <div class="canvas-orb canvas-orb-3"></div>
 
-    <!-- Orbes Lumineux Animés (Aurora Glows) -->
-    <div class="aurora-orb-1"></div>
-    <div class="aurora-orb-2"></div>
-    <div class="aurora-orb-3"></div>
-
-    <!-- En-tête Supérieur Droit -->
-    <header class="h-16 px-6 md:px-8 flex items-center justify-end gap-3 z-20 shrink-0">
-      
-      <!-- Bouton Bascule Thème Clair / Sombre -->
-      <button onclick="toggleTheme()" title="Basculer thème Clair/Sombre" class="p-2 rounded-full bg-white/70 dark:bg-white/10 hover:bg-white dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-200 transition backdrop-blur-md shadow-sm active:scale-95">
-        <i id="theme-toggle-icon" data-lucide="sun" class="w-4 h-4"></i>
+    <!-- En-tête -->
+    <header class="canvas-header">
+      <button class="header-btn" onclick="openSettingsModal()">
+        <i data-lucide="rocket" style="width:13px;height:13px"></i>
+        Sunty Advanced
       </button>
-
-      <!-- Bouton Essayer Sunty Advanced (Ouvre les Quotas et Paramètres) -->
-      <button onclick="openSettingsModal()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-400/40 text-blue-700 dark:text-cyan-300 text-xs font-bold transition backdrop-blur-md shadow-sm active:scale-95">
-        <i data-lucide="rocket" class="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400"></i>
-        <span>Essayer Sunty Advanced</span>
-      </button>
-
-      <!-- Avatar Utilisateur -->
-      <div onclick="openSettingsModal()" title="Paramètres du compte" class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ml-1 shadow-md border border-white cursor-pointer hover:scale-105 transition">
-        J
-      </div>
+      <div class="avatar-btn" onclick="openSettingsModal()" title="Mon compte">S</div>
     </header>
 
-
-    <!-- Zone de Discussion Défilante -->
-    <div id="chat-container" class="flex-1 overflow-y-auto px-4 md:px-10 lg:px-12 py-4 space-y-6 max-w-4xl mx-auto w-full z-20">
-      
-      <!-- Vue dynamique des messages ou des vues de navigation -->
-      <div id="main-content-view" class="fade-in-up space-y-6">
-        <!-- Rempli dynamiquement par app.js -->
-      </div>
-
-    </div>
-
-
-    <!-- Barre de Saisie Flottante en bas -->
-    <div class="p-4 md:p-6 pt-2 max-w-3xl mx-auto w-full z-20 space-y-2">
-      
-      <!-- Aperçu de pièces jointes (multimodal) -->
-      <div id="file-preview-container" class="hidden flex flex-wrap gap-2 px-2"></div>
-
-      <!-- Formulaire d'envoi -->
-      <form onsubmit="handleChatSubmit(event)" class="chat-input-pill px-4 py-2.5 flex items-center gap-3 group">
-        
-        <input type="file" id="file-input" class="hidden" accept="image/*,.pdf,.txt,.md,.csv,.json">
-
-        <!-- Bouton Pièce Jointe (+) -->
-        <button type="button" onclick="triggerFileUpload()" title="Joindre une image ou un fichier" class="w-8 h-8 rounded-full bg-sky-50 dark:bg-white/10 hover:bg-sky-100 dark:hover:bg-cyan-500/20 text-sky-600 dark:text-cyan-300 flex items-center justify-center transition shrink-0 active:scale-95">
-          <i data-lucide="plus" class="w-5 h-5"></i>
-        </button>
-        
-        <!-- Input texte -->
-        <input id="chat-input" type="text" autocomplete="off" placeholder="Écris ton message ici..." class="bg-transparent border-none outline-none text-sm text-slate-800 dark:text-white placeholder-slate-400 flex-1 px-1">
-        
-        <div class="flex items-center gap-2 shrink-0">
-          <button type="button" onclick="showToast('Saisie vocale activée (simulation)')" title="Dictée vocale" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition rounded-full">
-            <i data-lucide="mic" class="w-5 h-5"></i>
-          </button>
-          <button type="button" onclick="openSettingsModal()" title="Paramètres IA" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition rounded-full">
-            <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
-          </button>
-          <button id="chat-submit-btn" type="submit" title="Envoyer le message" class="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 text-white flex items-center justify-center hover:opacity-95 transition shadow-md shadow-cyan-500/30 active:scale-95">
-            <i data-lucide="send-horizontal" class="w-4 h-4 ml-0.5"></i>
-          </button>
+    <!-- Zone de messages -->
+    <div id="chat-scroll" class="chat-scroll">
+      <div class="chat-inner">
+        <div id="main-content-view">
+          <!-- Rempli dynamiquement par app.js -->
         </div>
-      </form>
+      </div>
     </div>
 
+    <!-- Zone de saisie -->
+    <div class="input-zone">
+      <div id="file-preview-container" class="hidden" style="max-width:720px;margin:0 auto 8px;display:flex;flex-wrap:wrap;gap:8px;padding:0 4px"></div>
+
+      <div class="input-pill">
+        <form onsubmit="handleChatSubmit(event)">
+          <input type="file" id="file-input" class="hidden" accept="image/*,.pdf,.txt,.md,.csv,.json">
+          <div class="input-row">
+            <button type="button" class="input-icon-btn" onclick="triggerFileUpload()" title="Joindre un fichier">
+              <i data-lucide="paperclip" style="width:17px;height:17px"></i>
+            </button>
+            <input
+              id="chat-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Pose ta question à SuntyAI..."
+              class="input-field"
+            >
+            <button type="button" class="input-icon-btn" onclick="showToast('🎤 Dictée vocale bientôt disponible')" title="Dictée vocale">
+              <i data-lucide="mic" style="width:17px;height:17px"></i>
+            </button>
+            <button type="button" class="input-icon-btn" onclick="openSettingsModal()" title="Paramètres">
+              <i data-lucide="sliders-horizontal" style="width:17px;height:17px"></i>
+            </button>
+            <button id="chat-submit-btn" type="submit" class="input-send-btn" title="Envoyer">
+              <i data-lucide="send" style="width:15px;height:15px"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="input-footer">SuntyAI 1.0 par SuntyraXx · Les réponses peuvent être imprécises.</div>
+    </div>
   </main>
 
 
-  <!-- ================= 3. PANNEAU DROIT (WIDGETS & QUOTAS RÉELS) ================= -->
-  <aside class="w-80 bg-aurora-canvas flex flex-col justify-between border-l border-white/60 dark:border-white/10 p-5 z-20 shrink-0 overflow-y-auto space-y-6">
-    
-    <!-- Widget Suggestions Rapides -->
-    <div class="space-y-3">
-      <div class="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
-        <div class="flex items-center gap-1.5">
-          <i data-lucide="zap" class="w-4 h-4 text-amber-500 fill-amber-400"></i>
-          <span>Suggestions rapides</span>
-        </div>
-        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+  <!-- ═══════════════════════════════════════════════════════════
+       3. PANNEAU DROIT
+  ═══════════════════════════════════════════════════════════ -->
+  <aside class="right-panel" id="right-panel">
+
+    <!-- Suggestions rapides -->
+    <div class="rp-section">
+      <div class="rp-section-title">
+        <i data-lucide="zap" style="width:12px;height:12px"></i>
+        Suggestions rapides
       </div>
 
-      <div class="space-y-2">
-        <button onclick="insertPromptAction('Créer un site web interactif avec HTML, Tailwind et JavaScript')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800 dark:text-white cursor-pointer active:scale-98">
-          <div class="w-7 h-7 rounded-xl bg-blue-100 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-400/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
-            <i data-lucide="globe" class="w-4 h-4"></i>
-          </div>
-          <span>Créer un site web</span>
-        </button>
-
-        <button onclick="insertPromptAction('Analyse ce fichier et résume les points clés : ')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800 dark:text-white cursor-pointer active:scale-98">
-          <div class="w-7 h-7 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-400/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-            <i data-lucide="file-text" class="w-4 h-4"></i>
-          </div>
-          <span>Analyser un fichier</span>
-        </button>
-
-        <button onclick="insertPromptAction('Génère un composant React et Tailwind avec animations : ')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800 dark:text-white cursor-pointer active:scale-98">
-          <div class="w-7 h-7 rounded-xl bg-fuchsia-100 dark:bg-fuchsia-950/60 border border-fuchsia-200 dark:border-fuchsia-400/30 flex items-center justify-center text-fuchsia-600 dark:text-fuchsia-400 shrink-0">
-            <i data-lucide="code" class="w-4 h-4"></i>
-          </div>
-          <span>Générer un code</span>
-        </button>
-
-        <button onclick="insertPromptAction('Recherche les dernières actualités et nouveautés sur : ')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800 dark:text-white cursor-pointer active:scale-98">
-          <div class="w-7 h-7 rounded-xl bg-cyan-100 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-400/30 flex items-center justify-center text-cyan-600 dark:text-cyan-400 shrink-0">
-            <i data-lucide="search" class="w-4 h-4"></i>
-          </div>
-          <span>Rechercher sur le web</span>
-        </button>
-      </div>
-    </div>
-
-
-    <!-- Widget Suivi Réel des Quotas & Utilisation API -->
-    <div class="space-y-3">
-      <div class="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
-        <div class="flex items-center gap-1.5">
-          <i data-lucide="activity" class="w-4 h-4 text-cyan-500"></i>
-          <span>Quota & Utilisation API</span>
-        </div>
-        <span id="quota-percent" class="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold">1%</span>
-      </div>
-
-      <div class="glass-widget p-4 rounded-2xl space-y-3 text-xs">
+      <div class="rp-card" onclick="insertPromptAction('Crée un site web interactif complet avec HTML, CSS et JavaScript : ')">
+        <div class="rp-card-icon">🌐</div>
         <div>
-          <div class="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-            <span>Requêtes aujourd'hui</span>
-            <span id="quota-requests-count" class="font-bold text-slate-800 dark:text-white">12 / 1500</span>
-          </div>
-          <div class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div id="quota-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 rounded-full transition-all duration-500" style="width: 5%"></div>
-          </div>
+          <div class="rp-card-label">Créer un site web</div>
+          <div style="font-size:0.67rem;color:#a1a1aa;margin-top:1px">HTML, CSS, JavaScript</div>
         </div>
+      </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-white/10 text-[11px]">
-          <div>
-            <span class="text-slate-400 block text-[10px]">Tokens générés</span>
-            <span id="quota-tokens-count" class="font-bold text-slate-800 dark:text-white">4 280</span>
-          </div>
-          <div>
-            <span class="text-slate-400 block text-[10px]">Latence moyenne</span>
-            <span id="quota-latency" class="font-bold text-emerald-600 dark:text-emerald-400">220ms</span>
-          </div>
+      <div class="rp-card" onclick="insertPromptAction('Analyse ce fichier et résume les points clés en bullet points : ')">
+        <div class="rp-card-icon">📄</div>
+        <div>
+          <div class="rp-card-label">Analyser un document</div>
+          <div style="font-size:0.67rem;color:#a1a1aa;margin-top:1px">Résumé et points clés</div>
         </div>
+      </div>
 
-        <div class="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-white/10 text-[10px]">
-          <span class="text-slate-400">Sécurité API</span>
-          <span class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>AES-256-GCM</span>
-          </span>
+      <div class="rp-card" onclick="insertPromptAction('Génère un composant React avec animations et TypeScript : ')">
+        <div class="rp-card-icon">⚡</div>
+        <div>
+          <div class="rp-card-label">Générer du code</div>
+          <div style="font-size:0.67rem;color:#a1a1aa;margin-top:1px">React, TypeScript, Python...</div>
+        </div>
+      </div>
+
+      <div class="rp-card" onclick="insertPromptAction('Explique-moi en détail et de façon claire : ')">
+        <div class="rp-card-icon">💡</div>
+        <div>
+          <div class="rp-card-label">Expliquer un concept</div>
+          <div style="font-size:0.67rem;color:#a1a1aa;margin-top:1px">Pédagogie et clarté</div>
         </div>
       </div>
     </div>
 
+    <div class="divider"></div>
 
-    <!-- Widget Modèle Actif SuntyAI 1.0 -->
-    <div class="space-y-3">
-      <div class="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-white">
-        <div class="flex items-center gap-1.5">
-          <i data-lucide="star" class="w-4 h-4 text-blue-600"></i>
-          <span>Moteur d'IA Actif</span>
-        </div>
+    <!-- Quota & Usage -->
+    <div class="rp-section">
+      <div class="rp-section-title" style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:6px">
+          <i data-lucide="activity" style="width:12px;height:12px"></i>
+          Quota & Utilisation
+        </span>
+        <span id="quota-percent" style="font-size:0.65rem;font-weight:700;color:#09090b">0%</span>
       </div>
 
-      <div class="glass-widget p-3.5 rounded-2xl flex items-center justify-between border-cyan-400/40 bg-white/90 dark:bg-slate-800/80 shadow-md">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 to-blue-600 p-0.5 shrink-0 shadow-sm">
-            <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300"></i>
+      <div class="quota-widget">
+        <div class="quota-row">
+          <span>Requêtes aujourd'hui</span>
+          <strong id="quota-requests-count">0 / 1 500</strong>
+        </div>
+        <div class="quota-bar-track">
+          <div class="quota-bar-fill" id="quota-progress-bar" style="width:0%"></div>
+        </div>
+
+        <div class="quota-stats">
+          <div class="quota-stat">
+            <span class="quota-stat-label">Tokens générés</span>
+            <span class="quota-stat-value" id="quota-tokens-count">0</span>
+          </div>
+          <div class="quota-stat">
+            <span class="quota-stat-label">Latence moy.</span>
+            <span class="quota-stat-value green" id="quota-latency">—</span>
+          </div>
+          <div class="quota-stat">
+            <span class="quota-stat-label">Sécurité API</span>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+              <span class="status-dot"></span>
+              <span style="font-size:0.7rem;font-weight:600;color:#16a34a">AES-256</span>
             </div>
           </div>
-          <div class="flex flex-col">
-            <span class="text-xs font-bold text-slate-900 dark:text-white">SuntyAI 1.0</span>
-            <span class="text-[10px] text-cyan-600 dark:text-cyan-400">Par SuntyraXx • Multimodal</span>
+          <div class="quota-stat">
+            <span class="quota-stat-label">Statut</span>
+            <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+              <span class="status-dot"></span>
+              <span id="api-status-text" style="font-size:0.7rem;font-weight:600;color:#16a34a">OK</span>
+            </div>
           </div>
         </div>
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"></span>
       </div>
     </div>
 
+    <div class="divider"></div>
 
-    <!-- Carte Basse : Sunty Advanced (Ouvre les paramètres) -->
-    <div class="p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-fuchsia-600 text-white shadow-xl shadow-blue-500/20 space-y-3 relative overflow-hidden mt-auto">
-      <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-cyan-400/30 filter blur-xl pointer-events-none"></div>
-      
-      <div class="flex items-center gap-2">
-        <span class="text-lg">👑</span>
-        <h3 class="font-bold text-sm tracking-tight">Sunty Advanced</h3>
+    <!-- Moteur actif -->
+    <div class="rp-section">
+      <div class="rp-section-title">
+        <i data-lucide="cpu" style="width:12px;height:12px"></i>
+        Moteur IA actif
       </div>
-      <p class="text-xs text-blue-100 leading-relaxed">
-        Accédez aux paramètres avancés, à la personnalisation du prompt et aux statistiques.
-      </p>
-      
-      <button onclick="openSettingsModal()" class="w-full py-2.5 px-4 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition flex items-center justify-center gap-2 shadow-md active:scale-95">
-        <span>Paramètres & Quotas</span>
-        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      <div class="model-widget">
+        <div class="model-dot"></div>
+        <div style="flex:1">
+          <div class="model-info-name">SuntyAI 1.0</div>
+          <div class="model-info-sub">Par SuntyraXx · Multimodal · 100K ctx</div>
+        </div>
+        <i data-lucide="check-circle" style="width:14px;height:14px;color:#22c55e"></i>
+      </div>
+    </div>
+
+    <!-- CTA Bottom -->
+    <div class="rp-cta">
+      <div class="rp-cta-title">👑 Sunty Advanced</div>
+      <div class="rp-cta-desc">Personnalise ton expérience, accède aux paramètres avancés et gère tes données.</div>
+      <button class="rp-cta-btn" onclick="openSettingsModal()">
+        Paramètres & Quotas →
       </button>
     </div>
 
   </aside>
 
 
-  <!-- ================= 4. MODALE DE VRAIS PARAMÈTRES (SETTINGS) ================= -->
-  <div id="settings-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-cyan-400/40 rounded-3xl p-6 md:p-8 max-w-xl w-full text-white space-y-6 shadow-[0_0_50px_rgba(0,240,255,0.3)] relative max-h-[90vh] overflow-y-auto">
-      
-      <!-- Bouton Fermer -->
-      <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition">
-        <i data-lucide="x" class="w-5 h-5"></i>
+  <!-- ═══════════════════════════════════════════════════════════
+       4. MODALE PARAMÈTRES
+  ═══════════════════════════════════════════════════════════ -->
+  <div id="settings-modal" class="modal-overlay hidden" onclick="closeSettingsModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+
+      <button class="modal-close" onclick="closeSettingsModal()">
+        <i data-lucide="x" style="width:13px;height:13px"></i>
       </button>
 
-      <!-- En-tête -->
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 p-0.5 shadow-lg">
-          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-xl">
-            ⚙️
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:40px;height:40px;border-radius:10px;background:#09090b;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(0,0,0,0.1)">
+            <img src="/assets/sunty-logo.png" alt="Sunty" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.innerHTML='⚙️'">
           </div>
-        </div>
-        <div>
-          <h2 class="text-xl font-black">Paramètres SuntyAI 1.0</h2>
-          <p class="text-xs text-slate-400">Contrôle du modèle, sécurité de la clé et gestion des données</p>
-        </div>
-      </div>
-
-      <!-- Section 1 : Contrôle des hyperparamètres IA -->
-      <div class="space-y-4 pt-1">
-        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Paramètres de Génération</h3>
-        
-        <!-- Slider Température -->
-        <div class="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/10">
-          <div class="flex justify-between text-xs font-bold">
-            <span>Température (Créativité)</span>
-            <span id="settings-temp-value" class="text-cyan-400 font-mono">0.7</span>
-          </div>
-          <input id="settings-temp-slider" type="range" min="0.0" max="1.0" step="0.05" value="0.7" oninput="document.getElementById('settings-temp-value').innerText = this.value" class="w-full accent-cyan-400">
-          <div class="flex justify-between text-[10px] text-slate-500">
-            <span>Précis / Déterministe</span>
-            <span>Équilibré</span>
-            <span>Ultra Créatif</span>
-          </div>
-        </div>
-
-        <!-- Slider Max Tokens -->
-        <div class="space-y-1.5 p-3 rounded-xl bg-white/5 border border-white/10">
-          <div class="flex justify-between text-xs font-bold">
-            <span>Longueur Max (Tokens)</span>
-            <span id="settings-tokens-value" class="text-cyan-400 font-mono">4096</span>
-          </div>
-          <input id="settings-tokens-slider" type="range" min="1024" max="8192" step="512" value="4096" oninput="document.getElementById('settings-tokens-value').innerText = this.value" class="w-full accent-cyan-400">
-          <div class="flex justify-between text-[10px] text-slate-500">
-            <span>Court (1024)</span>
-            <span>Standard (4096)</span>
-            <span>Max (8192)</span>
-          </div>
-        </div>
-
-        <!-- System Prompt Personnalisé -->
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300 block">Consignes Système Supplémentaires (Optionnel)</label>
-          <textarea id="settings-system-prompt" rows="3" placeholder="Ex: Réponds toujours de manière concise avec des exemples en Python..." class="w-full p-3 rounded-xl bg-slate-950 border border-white/15 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-400 transition resize-none"></textarea>
-        </div>
-      </div>
-
-      <!-- Section 2 : Statut de l'API & Test en Direct -->
-      <div class="space-y-3 pt-2 border-t border-white/10">
-        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Sécurité & Connectivité</h3>
-        <div class="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
           <div>
-            <span class="text-xs font-bold text-slate-200 block">Statut Clé d'API Gemini</span>
-            <span class="text-[10px] text-emerald-400">Chiffrée en AES-256-GCM (Serveur uniquement)</span>
+            <div class="modal-title">Paramètres SuntyAI 1.0</div>
+            <div class="modal-sub">Contrôle du modèle · Sécurité · Historique</div>
           </div>
-          <button id="test-api-btn" onclick="testApiConnection()" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 text-xs font-bold transition flex items-center gap-1.5 active:scale-95">
-            <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-            <span>Tester API</span>
-          </button>
-        </div>
-        <div id="api-test-status" class="text-xs text-right"></div>
-      </div>
-
-      <!-- Section 3 : Sauvegarde et Gestion des Données -->
-      <div class="space-y-3 pt-2 border-t border-white/10">
-        <h3 class="text-xs font-bold text-cyan-400 uppercase tracking-wider">Gestion de l'Historique</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <button onclick="exportChatsData()" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold transition flex items-center justify-center gap-2">
-            <i data-lucide="download" class="w-4 h-4 text-cyan-400"></i>
-            <span>Exporter JSON</span>
-          </button>
-          <button onclick="clearAllChats()" class="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-semibold transition flex items-center justify-center gap-2">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-            <span>Vider l'historique</span>
-          </button>
         </div>
       </div>
 
-      <!-- Boutons d'action -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition">
-          Annuler
-        </button>
-        <button onclick="saveSettingsFromModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 text-white text-xs font-bold hover:opacity-95 transition shadow-lg shadow-cyan-500/30 active:scale-95">
-          Sauvegarder les paramètres
-        </button>
+      <!-- Section 1 : Génération -->
+      <div class="modal-section-title">Paramètres de Génération</div>
+
+      <!-- Température -->
+      <div class="modal-field">
+        <div class="modal-slider-wrap">
+          <div class="modal-slider-header">
+            <span class="modal-slider-label">Température (Créativité)</span>
+            <span class="modal-slider-value" id="settings-temp-value">0.7</span>
+          </div>
+          <input
+            id="settings-temp-slider"
+            type="range"
+            min="0" max="1" step="0.05"
+            value="0.7"
+            class="modal-slider"
+            oninput="document.getElementById('settings-temp-value').textContent = parseFloat(this.value).toFixed(2)"
+          >
+          <div class="modal-slider-hints">
+            <span>Précis</span>
+            <span>Équilibré</span>
+            <span>Créatif</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Prompt -->
+      <div class="modal-field">
+        <label class="modal-label" for="settings-system-prompt">
+          Consignes Système supplémentaires (optionnel)
+        </label>
+        <textarea
+          id="settings-system-prompt"
+          class="modal-textarea"
+          rows="3"
+          placeholder="Ex : Réponds toujours en français, sois concis et utilise des exemples..."
+        ></textarea>
+      </div>
+
+      <!-- Section 2 : Sécurité -->
+      <div class="modal-section-title">Sécurité & Connectivité</div>
+      <div class="modal-field">
+        <div class="api-status-box">
+          <div>
+            <div class="api-status-info-title">Clé d'API Gemini</div>
+            <div class="api-status-info-sub">
+              <span class="status-dot"></span>
+              AES-256-GCM · Serveur uniquement
+            </div>
+          </div>
+          <button class="btn-test-api" id="test-api-btn" onclick="testApiConnection()">
+            <i data-lucide="activity" style="width:12px;height:12px"></i>
+            Tester
+          </button>
+        </div>
+        <div id="api-test-status" style="font-size:0.72rem;text-align:right;margin-top:6px;min-height:18px"></div>
+      </div>
+
+      <!-- Section 3 : Historique -->
+      <div class="modal-section-title">Gestion de l'Historique</div>
+      <div class="modal-field">
+        <div class="data-btns">
+          <button class="btn-data" onclick="exportChatsData()">
+            <i data-lucide="download" style="width:14px;height:14px"></i>
+            Exporter JSON
+          </button>
+          <button class="btn-data danger" onclick="clearAllChats()">
+            <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+            Vider l'historique
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSettingsModal()">Annuler</button>
+        <button class="btn-save" onclick="saveSettingsFromModal()">Sauvegarder</button>
       </div>
 
     </div>
   </div>
 
 
-  <!-- Toast de notification -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-cyan-400 text-white px-4 py-3 rounded-2xl shadow-2xl z-50 transform translate-y-20 opacity-0 transition duration-300 flex items-center gap-2 text-xs font-bold">
-    <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
-    <span id="toast-msg">Notification</span>
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0"></i>
+    <span id="toast-msg"></span>
   </div>
 
-  <!-- Script Frontend Principal -->
+
+  <!-- App JS -->
   <script src="/js/app.js"></script>
 
 </body>

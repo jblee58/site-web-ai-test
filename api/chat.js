@@ -186,8 +186,8 @@ module.exports = async function handler(req, res) {
     },
     generationConfig: {
       temperature: typeof req.body.temperature === 'number' ? req.body.temperature : 0.7,
-      topP: 0.95,
-      maxOutputTokens: typeof req.body.maxTokens === 'number' ? req.body.maxTokens : 4096
+      topP: 0.95
+      // Pas de maxOutputTokens — Gemini 3.8 Flash gère jusqu'à 100K+ tokens nativement
     }
   };
 
