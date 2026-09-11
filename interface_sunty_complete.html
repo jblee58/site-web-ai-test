@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sunty - Interface IA Intelligente</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Animation fluide des fonds Aurora */
+    @keyframes floatingAurora {
+      0% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+      33% { transform: translate(30px, -50px) scale(1.1) rotate(10deg); }
+      66% { transform: translate(-20px, 20px) scale(0.95) rotate(-5deg); }
+      100% { transform: translate(0px, 0px) scale(1) rotate(0deg); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.75; filter: blur(60px); }
+      50% { opacity: 0.95; filter: blur(45px); }
+    }
+
+    /* Arrière-plan néon hyper vibrant pour la zone centrale */
+    .bg-aurora-canvas {
+      background-color: #f3f7fc;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .aurora-orb-1 {
+      position: absolute;
+      top: -10%;
+      left: 15%;
+      width: 45vw;
+      height: 45vw;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.45) 0%, rgba(99, 102, 241, 0.3) 45%, transparent 75%);
+      filter: blur(70px);
+      animation: floatingAurora 18s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    .aurora-orb-2 {
+      position: absolute;
+      bottom: -15%;
+      right: 5%;
+      width: 50vw;
+      height: 50vw;
+      background: radial-gradient(circle, rgba(234, 179, 8, 0.5) 0%, rgba(132, 204, 22, 0.35) 35%, rgba(56, 189, 248, 0.3) 70%, transparent 85%);
+      filter: blur(80px);
+      animation: floatingAurora 22s infinite ease-in-out reverse;
+      pointer-events: none;
+    }
+
+    .aurora-orb-3 {
+      position: absolute;
+      top: 25%;
+      right: -10%;
+      width: 40vw;
+      height: 40vw;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(168, 85, 247, 0.3) 50%, transparent 80%);
+      filter: blur(75px);
+      animation: pulseGlow 12s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    /* Background sidebar sombre néon */
+    .bg-aurora-sidebar {
+      background: #060913;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-aurora-sidebar::before {
+      content: '';
+      position: absolute;
+      top: -15%;
+      left: -30%;
+      width: 160%;
+      height: 130%;
+      background: 
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.45) 0%, transparent 40%),
+        radial-gradient(circle at 10% 55%, rgba(168, 85, 247, 0.4) 0%, transparent 45%),
+        radial-gradient(circle at 20% 90%, rgba(34, 197, 94, 0.45) 0%, transparent 50%),
+        radial-gradient(circle at 85% 25%, rgba(236, 72, 153, 0.35) 0%, transparent 40%);
+      filter: blur(35px);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Effets de survol et transitions fluides */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+
+    .glass-widget {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-widget:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.12);
+    }
+
+    /* Animations d'apparition de la zone de chat */
+    .fade-in-up {
+      animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Def de scrollbar personnalisée */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+  </style>
+</head>
+
+<body class="h-full bg-slate-900 text-slate-800 antialiased selection:bg-cyan-500 selection:text-white flex overflow-hidden">
+
+  <!-- SVG Définition du Logo Sunty Officiel Gradient -->
+  <svg class="hidden">
+    <defs>
+      <linearGradient id="suntyLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#00F0FF" />
+        <stop offset="25%" stop-color="#0072FF" />
+        <stop offset="55%" stop-color="#D946EF" />
+        <stop offset="80%" stop-color="#FF416C" />
+        <stop offset="100%" stop-color="#FF9900" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- ================= 1. SIDEBAR GAUCHE (SOMBRE & NEON) ================= -->
+  <aside class="w-72 bg-aurora-sidebar flex flex-col justify-between border-r border-white/10 z-20 relative shrink-0">
+    <div class="p-4 relative z-10 flex flex-col h-full overflow-hidden">
+      
+      <!-- Top Logo Sunty & Pro Badge -->
+      <div class="flex items-center justify-between mb-5 px-1">
+        <div class="flex items-center gap-3">
+          <!-- SVG Logo Sunty 'S' -->
+          <div class="w-9 h-9 flex items-center justify-center shrink-0 drop-shadow-[0_0_15px_rgba(0,240,255,0.7)] hover:scale-105 transition cursor-pointer">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
+              <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
+                    stroke="url(#suntyLogoGrad)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="text-2xl font-black tracking-tight text-white drop-shadow-md">Sunty</span>
+        </div>
+
+        <!-- Badge Pro Dropdown -->
+        <button onclick="openProModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+          <span>👑 Pro</span>
+          <i data-lucide="chevron-down" class="w-3 h-3"></i>
+        </button>
+      </div>
+
+      <!-- Bouton Vibrant Nouveau Chat -->
+      <button onclick="startNewChat()" class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-fuchsia-600 text-white font-semibold text-sm hover:opacity-95 transition shadow-[0_0_25px_rgba(0,240,255,0.4)] mb-6 active:scale-98 group">
+        <div class="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center group-hover:rotate-180 transition duration-500">
+          <i data-lucide="sparkles" class="w-4 h-4 text-cyan-200"></i>
+        </div>
+        <span>Nouveau chat</span>
+        <i data-lucide="plus" class="w-4 h-4 ml-auto text-white/80"></i>
+      </button>
+
+      <!-- Menu Principal Navigation (Avec états actifs dynamiques) -->
+      <nav id="sidebar-nav" class="space-y-1 mb-5 text-slate-300 text-sm font-medium">
+        <a href="#" onclick="switchTab(event, 'accueil')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/15 text-white font-semibold relative transition border border-cyan-400/30 shadow-[0_0_15px_rgba(0,240,255,0.15)]" data-tab="accueil">
+          <span class="w-1.5 h-5 bg-cyan-400 rounded-full absolute left-0 shadow-[0_0_8px_#22d3ee]"></span>
+          <i data-lucide="home" class="w-4 h-4 text-cyan-400"></i>
+          <span>Accueil</span>
+        </a>
+        <a href="#" onclick="switchTab(event, 'recents')" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="recents">
+          <div class="flex items-center gap-3">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>Chats récents</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-blue-500/30 border border-blue-400/40 text-[11px] text-blue-200 font-bold">12</span>
+        </a>
+        <a href="#" onclick="switchTab(event, 'projets')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="projets">
+          <i data-lucide="folder" class="w-4 h-4"></i>
+          <span>Mes projets</span>
+        </a>
+        <a href="#" onclick="switchTab(event, 'bibliotheque')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="bibliotheque">
+          <i data-lucide="database" class="w-4 h-4"></i>
+          <span>Bibliothèque</span>
+        </a>
+        <a href="#" onclick="switchTab(event, 'outils')" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="outils">
+          <div class="flex items-center gap-3">
+            <i data-lucide="grid" class="w-4 h-4"></i>
+            <span>Outils</span>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+        </a>
+        <a href="#" onclick="switchTab(event, 'parametres')" class="nav-item flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition" data-tab="parametres">
+          <div class="flex items-center gap-3">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+            <span>Paramètres</span>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+        </a>
+      </nav>
+
+      <!-- Section Espaces -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-1">
+        <div class="flex items-center justify-between px-3 mb-2">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Espaces</span>
+          <button class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 transition">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white text-xs transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-indigo-500/30 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+              <i data-lucide="user" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold text-slate-200 group-hover:text-white">Personnel</span>
+              <span class="text-[10px] text-slate-400">Mon espace principal</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
+        </a>
+
+        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white text-xs transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-cyan-500/30 border border-cyan-400/30 flex items-center justify-center text-cyan-300">
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold text-slate-200 group-hover:text-white">Études</span>
+              <span class="text-[10px] text-slate-400">Projets & apprentissage</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
+        </a>
+
+        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white text-xs transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-rose-500/30 border border-rose-400/30 flex items-center justify-center text-rose-300">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold text-slate-200 group-hover:text-white">Création</span>
+              <span class="text-[10px] text-slate-400">Idées et contenus</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
+        </a>
+
+        <a href="#" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-300 hover:bg-white/5 hover:text-white text-xs transition group">
+          <div class="flex items-center gap-2.5">
+            <div class="w-6 h-6 rounded-lg bg-emerald-500/30 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
+              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="font-semibold text-slate-200 group-hover:text-white">Organisation</span>
+              <span class="text-[10px] text-slate-400">Tâches et planning</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300"></i>
+        </a>
+      </div>
+
+      <!-- Bas de Sidebar : Carte Plan Pro -->
+      <div class="pt-3 mt-auto">
+        <div onclick="openProModal()" class="w-full p-3 rounded-2xl bg-gradient-to-r from-blue-900/60 via-indigo-900/60 to-purple-900/60 border border-cyan-400/30 flex items-center justify-between hover:border-cyan-300 transition cursor-pointer shadow-[0_0_20px_rgba(0,240,255,0.15)] group">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-fuchsia-500 to-amber-400 p-0.5 shrink-0 shadow-md">
+              <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                <i data-lucide="sparkles" class="w-4 h-4 text-cyan-300"></i>
+              </div>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-white group-hover:text-cyan-300 transition">Passe en plan Pro</span>
+              <span class="text-[10px] text-slate-400 leading-tight">Plus de limites, plus d'outils...</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition"></i>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+
+  <!-- ================= 2. ZONE CENTRALE (CANVAS AURORA) ================= -->
+  <main class="flex-1 bg-aurora-canvas flex flex-col h-full relative overflow-hidden z-10">
+
+    <!-- Orbes Lumineux Animés (Aurora Glows) -->
+    <div class="aurora-orb-1"></div>
+    <div class="aurora-orb-2"></div>
+    <div class="aurora-orb-3"></div>
+
+    <!-- En-tête Supérieur Droit -->
+    <header class="h-16 px-8 flex items-center justify-end gap-3 z-20 shrink-0">
+      <button onclick="toggleTheme()" class="p-2 rounded-full bg-white/70 hover:bg-white border border-slate-200 text-slate-600 hover:text-slate-900 transition backdrop-blur-md shadow-sm">
+        <i data-lucide="sun" class="w-4 h-4"></i>
+      </button>
+
+      <button onclick="openProModal()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 hover:bg-blue-500/20 border border-blue-400/40 text-blue-700 text-xs font-bold transition backdrop-blur-md shadow-sm">
+        <i data-lucide="rocket" class="w-3.5 h-3.5 text-blue-600"></i>
+        <span>Essayer Sunty Advanced</span>
+      </button>
+
+      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs ml-1 shadow-md border border-white">
+        J
+      </div>
+    </header>
+
+
+    <!-- Zone de Discussion Défilante -->
+    <div id="chat-container" class="flex-1 overflow-y-auto px-4 md:px-12 lg:px-16 py-4 space-y-6 max-w-4xl mx-auto w-full z-20">
+
+      <!-- Dynamic Tab View Container -->
+      <div id="main-content-view" class="fade-in-up space-y-6">
+        
+        <!-- Message de l'utilisateur -->
+        <div class="flex justify-end gap-3 items-start">
+          <div class="bg-sky-200/80 backdrop-blur-md text-slate-900 rounded-3xl rounded-tr-sm px-6 py-3.5 max-w-xl text-sm font-medium leading-relaxed border border-sky-300/80 shadow-md">
+            Et compare l'avantage de créer un site moi même avec ma api key même model que le site de gemini le même model
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-md">
+            👤
+          </div>
+        </div>
+
+        <!-- Réponse IA dans la Grande Carte Glassmorphism -->
+        <div class="glass-card rounded-3xl p-6 md:p-8 space-y-6">
+          
+          <!-- En-tête de la carte avec Logo Sunty officiel -->
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 flex items-center justify-center shrink-0 drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">
+              <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
+                <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
+                      stroke="url(#suntyLogoGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <p class="text-sm font-medium text-slate-800 leading-relaxed pt-1">
+              Utiliser ton propre site (ou un client personnalisé comme NextChat, LibreChat ou Open WebUI) avec ta clé API plutôt que de passer par l'interface web de Gemini change complètement l'expérience.
+            </p>
+          </div>
+
+          <!-- Titre & Badges -->
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Les avantages de ton propre site (API)</h2>
+            <span class="px-3 py-1 rounded-full bg-cyan-100 text-cyan-800 text-xs font-bold border border-cyan-200">Rapide</span>
+            <span class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold border border-indigo-200">Flexible</span>
+            <span class="px-3 py-1 rounded-full bg-fuchsia-100 text-fuchsia-800 text-xs font-bold border border-fuchsia-200">Puissant</span>
+          </div>
+
+          <!-- Liste des points forts -->
+          <div class="space-y-4 pt-1">
+
+            <!-- Item 1 -->
+            <div class="flex items-start gap-4 hover:translate-x-1 transition duration-200">
+              <div class="w-9 h-9 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-sm">
+                <i data-lucide="zap" class="w-4 h-4 fill-amber-500"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Réponses brutes et plus détaillées</h3>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">
+                  Les sites grand public comme Gemini appliquent des instructions système strictes qui peuvent limiter la liberté de ton modèle. Avec l'API, tu profites des capacités complètes du modèle, sans ces limitations.
+                </p>
+              </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="flex items-start gap-4 hover:translate-x-1 transition duration-200">
+              <div class="w-9 h-9 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0 shadow-sm">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Contrôle total des paramètres</h3>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">
+                  Tu choisis la température, la longueur de réponse, le Top-P / Top-K, et tu maîtrises totalement les tokens (nombre maximum de tokens générés).
+                </p>
+              </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="flex items-start gap-4 hover:translate-x-1 transition duration-200">
+              <div class="w-9 h-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
+                <i data-lucide="user" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Personnalisation du System Prompt</h3>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">
+                  Tu peux imposer des consignes système permanentes (ex. style, format, ton, rôle, etc.) et adapter un style précis à tes besoins (ex. lien direct avec ton serveur ou tes outils).
+                </p>
+              </div>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="flex items-start gap-4 hover:translate-x-1 transition duration-200">
+              <div class="w-9 h-9 rounded-full bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-sm">
+                <i data-lucide="code-2" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm text-slate-900">Interface sur-mesure et stockage</h3>
+                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside mt-1 leading-relaxed">
+                  <li>Tu choisis l'ergonomie (thèmes, raccourcis, surbrillance du code, Markdown, etc.).</li>
+                  <li>Ton historique reste stocké localement ou sur ta propre base de données, sans dépendre de l'interface Google.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Banner Résumé Gradient Jaune -->
+          <div class="bg-gradient-to-r from-cyan-100 via-sky-100 to-amber-100 border border-amber-300/80 rounded-2xl p-4 flex items-center justify-between gap-4 mt-2 shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 flex items-center justify-center shrink-0 drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">
+                <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
+                  <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
+                        stroke="url(#suntyLogoGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <p class="text-xs font-semibold text-slate-800">
+                En résumé : <span class="text-blue-700 font-bold">un site avec l'API</span> te donne plus <span class="font-bold">de liberté</span>, plus de <span class="font-bold">contrôle</span> et une expérience vraiment personnalisée, au prix d'un peu plus de mise en place.
+              </p>
+            </div>
+            <button onclick="showToast('Résumé copié dans le presse-papier !')" class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-50 transition shrink-0 shadow-sm active:scale-95">
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- Barre de Saisie Flottante en bas -->
+    <div class="p-6 pt-2 max-w-3xl mx-auto w-full z-20">
+      <form onsubmit="handleChatSubmit(event)" class="bg-white/95 backdrop-blur-2xl border border-sky-200/90 rounded-full px-4 py-2.5 shadow-[0_10px_35px_rgba(56,189,248,0.2)] flex items-center gap-3 hover:border-cyan-400 transition group focus-within:border-cyan-500">
+        <button type="button" class="w-8 h-8 rounded-full bg-sky-50 hover:bg-sky-100 text-sky-600 flex items-center justify-center transition shrink-0">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+        </button>
+        
+        <input id="chat-input" type="text" placeholder="Écris ton message ici..." class="bg-transparent border-none outline-none text-sm text-slate-800 placeholder-slate-400 flex-1 px-1">
+        
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" class="p-2 text-slate-400 hover:text-slate-600 transition rounded-full">
+            <i data-lucide="mic" class="w-5 h-5"></i>
+          </button>
+          <button type="button" class="p-2 text-slate-400 hover:text-slate-600 transition rounded-full">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5"></i>
+          </button>
+          <button type="submit" class="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-400 via-blue-500 to-fuchsia-500 text-white flex items-center justify-center hover:opacity-95 transition shadow-md shadow-cyan-500/30 active:scale-95">
+            <i data-lucide="send-horizontal" class="w-4 h-4 ml-0.5"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+
+  <!-- ================= 3. PANNEAU DROIT (WIDGETS & MODÈLES) ================= -->
+  <aside class="w-80 bg-aurora-canvas flex flex-col justify-between border-l border-white/60 p-5 z-20 shrink-0 overflow-y-auto space-y-6">
+    
+    <!-- Widget Suggestions Rapides -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-500 fill-amber-400"></i>
+          <span>Suggestions rapides</span>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+      </div>
+
+      <div class="space-y-2">
+        <button onclick="sendQuickPrompt('Créer un site web interactif')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800">
+          <div class="w-7 h-7 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+            <i data-lucide="globe" class="w-4 h-4"></i>
+          </div>
+          <span>Créer un site web</span>
+        </button>
+
+        <button onclick="sendQuickPrompt('Analyse ce fichier et résume les points clés')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800">
+          <div class="w-7 h-7 rounded-xl bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600 shrink-0">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+          </div>
+          <span>Analyser un fichier</span>
+        </button>
+
+        <button onclick="sendQuickPrompt('Génère un composant React et Tailwind')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800">
+          <div class="w-7 h-7 rounded-xl bg-fuchsia-100 border border-fuchsia-200 flex items-center justify-center text-fuchsia-600 shrink-0">
+            <i data-lucide="code" class="w-4 h-4"></i>
+          </div>
+          <span>Générer un code</span>
+        </button>
+
+        <button onclick="sendQuickPrompt('Recherche les dernières actus IA')" class="w-full glass-widget p-3 rounded-2xl text-left flex items-center gap-3 text-xs font-semibold text-slate-800">
+          <div class="w-7 h-7 rounded-xl bg-cyan-100 border border-cyan-200 flex items-center justify-center text-cyan-600 shrink-0">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </div>
+          <span>Rechercher sur le web</span>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- Widget Modèles Populaires -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-800">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="star" class="w-4 h-4 text-blue-600"></i>
+          <span>Modèles populaires</span>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+      </div>
+
+      <div class="space-y-2">
+
+        <!-- Modèle GPT-4o -->
+        <button onclick="selectModel('GPT-4o')" class="model-btn w-full glass-widget p-3 rounded-2xl text-left flex items-center justify-between group active-model" data-model="GPT-4o">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-400/30 flex items-center justify-center text-emerald-600">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-900">GPT-4o</span>
+              <span class="text-[10px] text-slate-500">Le plus polyvalent</span>
+            </div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+        </button>
+
+        <!-- Modèle Claude 3.5 -->
+        <button onclick="selectModel('Claude 3.5')" class="model-btn w-full glass-widget p-3 rounded-2xl text-left flex items-center justify-between group" data-model="Claude 3.5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-400/30 flex items-center justify-center text-amber-600">
+              <i data-lucide="sun" class="w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-900">Claude 3.5</span>
+              <span class="text-[10px] text-slate-500">Ultra créatif</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Modèle Gemini 1.5 -->
+        <button onclick="selectModel('Gemini 1.5')" class="model-btn w-full glass-widget p-3 rounded-2xl text-left flex items-center justify-between group" data-model="Gemini 1.5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-blue-600">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-900">Gemini 1.5</span>
+              <span class="text-[10px] text-slate-500">Multimodal</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Modèle Llama 3.1 -->
+        <button onclick="selectModel('Llama 3.1')" class="model-btn w-full glass-widget p-3 rounded-2xl text-left flex items-center justify-between group" data-model="Llama 3.1">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-400/30 flex items-center justify-center text-indigo-600">
+              <i data-lucide="infinity" class="w-4 h-4"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-slate-900">Llama 3.1</span>
+              <span class="text-[10px] text-slate-500">Open source</span>
+            </div>
+          </div>
+        </button>
+
+      </div>
+    </div>
+
+
+    <!-- Carte Promotionnelle Sunty Advanced -->
+    <div class="p-5 rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-fuchsia-600 text-white shadow-xl shadow-blue-500/20 space-y-3 relative overflow-hidden mt-auto">
+      <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-cyan-400/30 filter blur-xl pointer-events-none"></div>
+      
+      <div class="flex items-center gap-2">
+        <span class="text-lg">👑</span>
+        <h3 class="font-bold text-sm tracking-tight">Sunty Advanced</h3>
+      </div>
+      <p class="text-xs text-blue-100 leading-relaxed">
+        Accédez aux modèles les plus puissants et à des fonctionnalités exclusives.
+      </p>
+      
+      <button onclick="openProModal()" class="w-full py-2.5 px-4 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition flex items-center justify-center gap-2 shadow-md">
+        <span>En savoir plus</span>
+        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+
+  </aside>
+
+
+  <!-- ================= MODAL ADVANCED PRO ================= -->
+  <div id="pro-modal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-cyan-400/40 rounded-3xl p-6 md:p-8 max-w-lg w-full text-white space-y-6 shadow-[0_0_50px_rgba(0,240,255,0.3)] relative">
+      <button onclick="closeProModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2 rounded-full">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 to-fuchsia-500 p-0.5 shadow-lg">
+          <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-xl">👑</div>
+        </div>
+        <div>
+          <h2 class="text-xl font-black">Sunty Advanced Pro</h2>
+          <p class="text-xs text-slate-400">Débloquez la puissance maximale de l'IA</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-sm">
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+          <i data-lucide="check-circle" class="w-5 h-5 text-cyan-400"></i>
+          <span>Accès illimité à GPT-4o, Claude 3.5 & Gemini 1.5 Pro</span>
+        </div>
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+          <i data-lucide="check-circle" class="w-5 h-5 text-fuchsia-400"></i>
+          <span>Génération d'images Ultra HD en temps réel</span>
+        </div>
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+          <i data-lucide="check-circle" class="w-5 h-5 text-amber-400"></i>
+          <span>Analyse de documents complexes (PDF, Code, CSV)</span>
+        </div>
+      </div>
+
+      <button onclick="closeProModal(); showToast('Redirection vers le paiement...')" class="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 font-extrabold text-sm hover:opacity-95 transition shadow-lg shadow-cyan-500/30">
+        Activer Sunty Pro - 19,99€ / mois
+      </button>
+    </div>
+  </div>
+
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 border border-cyan-400 text-white px-4 py-3 rounded-2xl shadow-2xl z-50 transform translate-y-20 opacity-0 transition duration-300 flex items-center gap-2 text-xs font-bold">
+    <i data-lucide="info" class="w-4 h-4 text-cyan-400"></i>
+    <span id="toast-msg">Notification</span>
+  </div>
+
+
+  <!-- ================= JAVASCRIPT INTERACTIF ================= -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Gestions des Onglets de Sidebar
+    function switchTab(e, tabId) {
+      e.preventDefault();
+      
+      // Update sidebar state
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('bg-white/15', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
+        item.classList.add('text-slate-300', 'hover:bg-white/10');
+        const indicator = item.querySelector('.bg-cyan-400');
+        if (indicator) indicator.remove();
+      });
+
+      const clicked = e.currentTarget;
+      clicked.classList.add('bg-white/15', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
+      clicked.insertAdjacentHTML('afterbegin', '<span class="w-1.5 h-5 bg-cyan-400 rounded-full absolute left-0 shadow-[0_0_8px_#22d3ee]"></span>');
+
+      // Update View
+      const mainView = document.getElementById('main-content-view');
+      mainView.classList.remove('fade-in-up');
+      void mainView.offsetWidth; // Trigger reflow
+      mainView.classList.add('fade-in-up');
+
+      if (tabId === 'recents') {
+        showToast("Affichage des 12 conversations récentes");
+      } else if (tabId === 'projets') {
+        showToast("Espace Projets chargé");
+      } else {
+        showToast("Vue " + tabId + " chargée");
+      }
+    }
+
+    // Gestion de l'envoi de prompt
+    function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendUserMessage(text);
+      input.value = '';
+
+      // Simulation de la réponse IA
+      setTimeout(() => {
+        appendAIResponse(text);
+      }, 800);
+    }
+
+    function sendQuickPrompt(promptText) {
+      document.getElementById('chat-input').value = promptText;
+      handleChatSubmit(new Event('submit'));
+    }
+
+    function appendUserMessage(text) {
+      const container = document.getElementById('main-content-view');
+      const userHTML = `
+        <div class="flex justify-end gap-3 items-start fade-in-up">
+          <div class="bg-sky-200/80 backdrop-blur-md text-slate-900 rounded-3xl rounded-tr-sm px-6 py-3.5 max-w-xl text-sm font-medium leading-relaxed border border-sky-300/80 shadow-md">
+            ${escapeHTML(text)}
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-md">
+            👤
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', userHTML);
+      scrollToBottom();
+    }
+
+    function appendAIResponse(promptText) {
+      const container = document.getElementById('main-content-view');
+      const aiHTML = `
+        <div class="glass-card rounded-3xl p-6 md:p-8 space-y-4 fade-in-up">
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 flex items-center justify-center shrink-0 drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">
+              <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
+                <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
+                      stroke="url(#suntyLogoGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="space-y-2 pt-1 flex-1">
+              <h3 class="font-bold text-slate-900 text-sm">Analyse Sunty pour : "${escapeHTML(promptText)}"</h3>
+              <p class="text-xs text-slate-700 leading-relaxed">
+                Voici le résultat généré avec le modèle actif. Vous pouvez exporter ce résultat ou affiner votre recherche en utilisant les outils de la barre latérale.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', aiHTML);
+      scrollToBottom();
+    }
+
+    // Modèles
+    function selectModel(modelName) {
+      document.querySelectorAll('.model-btn').forEach(btn => {
+        btn.classList.remove('border-emerald-400/50', 'bg-white/90');
+        const badge = btn.querySelector('.bg-emerald-500');
+        if (badge) badge.remove();
+      });
+
+      const selected = document.querySelector(`[data-model="${modelName}"]`);
+      if (selected) {
+        selected.insertAdjacentHTML('beforeend', '<span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>');
+      }
+      showToast('Modèle actif : ' + modelName);
+    }
+
+    // Start New Chat
+    function startNewChat() {
+      const container = document.getElementById('main-content-view');
+      container.innerHTML = `
+        <div class="glass-card rounded-3xl p-8 text-center space-y-4 fade-in-up">
+          <div class="w-16 h-16 mx-auto flex items-center justify-center drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]">
+            <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
+              <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
+                    stroke="url(#suntyLogoGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-black text-slate-900">Nouvelle session Sunty</h2>
+          <p class="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+            Posez une question, importez des documents ou choisissez une suggestion rapide dans le panneau de droite.
+          </p>
+        </div>
+      `;
+      showToast('Nouveau chat initialisé');
+    }
+
+    // Modal Pro
+    function openProModal() {
+      document.getElementById('pro-modal').classList.remove('hidden');
+    }
+    function closeProModal() {
+      document.getElementById('pro-modal').classList.add('hidden');
+    }
+
+    // Utilities
+    function scrollToBottom() {
+      const chat = document.getElementById('chat-container');
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    function toggleTheme() {
+      showToast('Basculement de thème d\'affichage');
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  </script>
+</body>
+</html>

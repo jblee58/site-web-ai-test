@@ -1,0 +1,26 @@
+{
+  "name": "sunty-ai-chat",
+  "version": "1.0.0",
+  "description": "Application Web de Chat IA Sunty avec Google Gemini, Streaming en temps réel et Glassmorphism Aurora",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "encrypt": "node scripts/encrypt.js"
+  },
+  "keywords": [
+    "ai",
+    "gemini",
+    "chat",
+    "vercel",
+    "streaming",
+    "tailwindcss"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
