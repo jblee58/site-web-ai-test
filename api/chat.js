@@ -175,16 +175,19 @@ module.exports = async function handler(req, res) {
     ];
   }
 
+  const customPrompt = req.body.customSystemPrompt || '';
+  const finalSystemPrompt = getSystemPrompt(customPrompt);
+
   // Payload conforme à l'API Google Generative Language
   const geminiPayload = {
     contents: conversationContents,
     systemInstruction: {
-      parts: [{ text: systemPrompt }]
+      parts: [{ text: finalSystemPrompt }]
     },
     generationConfig: {
-      temperature: 0.7,
+      temperature: typeof req.body.temperature === 'number' ? req.body.temperature : 0.7,
       topP: 0.95,
-      maxOutputTokens: 4096
+      maxOutputTokens: typeof req.body.maxTokens === 'number' ? req.body.maxTokens : 4096
     }
   };
 
