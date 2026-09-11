@@ -39,31 +39,8 @@ function checkRateLimit(ip) {
   return { allowed: true };
 }
 
-// Résolution du modèle Gemini réel et du System Prompt selon le choix de l'utilisateur
-function resolveModelConfig(selectedModel) {
-  const defaultModel = process.env.DEFAULT_MODEL || 'gemini-3.8-flash';
-  const modelLower = (selectedModel || '').toLowerCase();
-
-  let geminiModelName = defaultModel;
-  let systemPersona = "Tu es Sunty, un assistant d'intelligence artificielle intelligent, chaleureux, rapide et précis. Tu structures toujours tes réponses avec un Markdown élégant, des titres clairs, des puces et des blocs de code avec coloration lorsque pertinent.";
-
-  if (selectedModel && selectedModel.startsWith('gemini-')) {
-    geminiModelName = selectedModel;
-  } else if (modelLower.includes('gpt-4o')) {
-    geminiModelName = defaultModel;
-    systemPersona = "Tu es Sunty alimenté par une configuration haute performance polyvalente (style GPT-4o). Réponds de manière complète, structurée et logique.";
-  } else if (modelLower.includes('claude')) {
-    geminiModelName = defaultModel;
-    systemPersona = "Tu es Sunty alimenté par une configuration ultra-créative et littéraire (style Claude 3.5). Soigne particulièrement l'élégance du style et la clarté explicative.";
-  } else if (modelLower.includes('llama')) {
-    geminiModelName = defaultModel;
-    systemPersona = "Tu es Sunty alimenté par une configuration axée sur le code et les données brutes (style Llama 3.1). Sois concis, direct et technique.";
-  } else if (modelLower.includes('gemini')) {
-    geminiModelName = defaultModel;
-  }
-
-  return { geminiModelName, systemPersona };
-}
+const { decryptKey } = require('../utils/crypto');
+const { getSystemPrompt } = require('../config/systemPrompt');
 
 module.exports = async function handler(req, res) {
   // 1. Protection CORS
@@ -94,14 +71,12 @@ module.exports = async function handler(req, res) {
     });
   }
 
-const { decryptKey } = require('../utils/crypto');
-
   // 3. Vérification & Déchiffrement sécurisé de la clé d'API
   let apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     console.error('[SUNTY BACKEND] Erreur: GEMINI_API_KEY manquante dans les variables d\'environnement.');
     return res.status(500).json({
-      error: "Clé d'API Gemini manquante côté serveur. Veuillez définir GEMINI_API_KEY dans le fichier .env ou les paramètres Vercel."
+      error: "Clé d'API manquante côté serveur. Veuillez définir GEMINI_API_KEY dans le fichier .env ou les paramètres Vercel."
     });
   }
 
@@ -118,41 +93,93 @@ const { decryptKey } = require('../utils/crypto');
     }
   }
 
-  // 4. Validation des entrées utilisateur
-  const { message, messages, model } = req.body || {};
+  // 4. Validation des entrées utilisateur & Fichiers
+  const { message, messages, files } = req.body || {};
 
-  if (!message && (!messages || !Array.isArray(messages) || messages.length === 0)) {
+  if (!message && (!messages || !Array.isArray(messages) || messages.length === 0) && (!files || files.length === 0)) {
     return res.status(400).json({
-      error: 'Requête invalide: un message ou un historique de messages est requis.'
+      error: 'Requête invalide: un message ou un fichier est requis.'
     });
   }
 
-  const { geminiModelName, systemPersona } = resolveModelConfig(model);
+  // Modèle unique propulsant SuntyAI 1.0
+  const geminiModelName = process.env.DEFAULT_MODEL || 'gemini-3.8-flash';
+  const systemPrompt = getSystemPrompt();
 
-  // 5. Préparation de l'historique de conversation (Multi-turn Context)
+  // 5. Préparation des pièces jointes multimodales (inlineData)
+  const incomingFileParts = [];
+  if (Array.isArray(files) && files.length > 0) {
+    for (const f of files) {
+      if (f.data && f.mimeType) {
+        let cleanBase64 = String(f.data);
+        if (cleanBase64.includes(';base64,')) {
+          cleanBase64 = cleanBase64.split(';base64,')[1];
+        }
+        incomingFileParts.push({
+          inlineData: {
+            mimeType: f.mimeType,
+            data: cleanBase64
+          }
+        });
+      }
+    }
+  }
+
+  // 6. Préparation de l'historique de conversation (Multi-turn Context)
   let conversationContents = [];
 
   if (Array.isArray(messages) && messages.length > 0) {
-    // Ne garder que les 16 derniers messages pour préserver le contexte sans surcharger
     const recentMessages = messages.slice(-16);
-    conversationContents = recentMessages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: String(msg.content || msg.text || '') }]
-    }));
+    conversationContents = recentMessages.map((msg, index) => {
+      const isLast = index === recentMessages.length - 1;
+      const isUser = msg.role === 'user';
+      const parts = [];
+
+      // Si c'est le dernier message utilisateur et qu'il y a des fichiers transmis
+      if (isLast && isUser && incomingFileParts.length > 0) {
+        parts.push(...incomingFileParts);
+      }
+
+      // Si le message historique avait déjà des pièces jointes attachées
+      if (Array.isArray(msg.files) && msg.files.length > 0) {
+        for (const fileItem of msg.files) {
+          if (fileItem.data && fileItem.mimeType) {
+            let b64 = String(fileItem.data);
+            if (b64.includes(';base64,')) b64 = b64.split(';base64,')[1];
+            parts.push({
+              inlineData: {
+                mimeType: fileItem.mimeType,
+                data: b64
+              }
+            });
+          }
+        }
+      }
+
+      parts.push({ text: String(msg.content || msg.text || (parts.length > 0 ? "Analyse ces fichiers." : "")) });
+
+      return {
+        role: isUser ? 'user' : 'model',
+        parts: parts
+      };
+    });
   } else {
+    const userParts = [...incomingFileParts];
+    userParts.push({ text: String(message || (incomingFileParts.length > 0 ? "Analyse ce document." : "")) });
+
     conversationContents = [
       {
         role: 'user',
-        parts: [{ text: String(message) }]
+        parts: userParts
       }
     ];
   }
 
-  // Payload conforme à l'API Google Gemini
+  // Payload conforme à l'API Google Generative Language
   const geminiPayload = {
     contents: conversationContents,
     systemInstruction: {
-      parts: [{ text: systemPersona }]
+      parts: [{ text: systemPrompt }]
     },
     generationConfig: {
       temperature: 0.7,

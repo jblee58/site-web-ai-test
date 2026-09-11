@@ -1,20 +1,20 @@
 // ============================================================================
-// SUNTY AI - FRONTEND APPLICATION JAVASCRIPT
-// Streaming SSE, Mémoire Locale, Markdown + Highlight.js, Gestion Multi-Chats
+// SUNTY AI 1.0 - APPLICATION JAVASCRIPT FRONTEND
+// Multimodalité, Cycle de vie des discussions, Streaming SSE & Formatage Maquette
 // ============================================================================
 
-const STORAGE_KEY = 'sunty_chat_sessions_v1';
+const STORAGE_KEY = 'sunty_chat_sessions_v2';
 const THEME_KEY = 'sunty_theme_preference';
 
 // État global de l'application
 const state = {
-  currentSessionId: null,
-  activeModel: 'Gemini 3.8 Flash', // Modèle actif par défaut
+  currentSessionId: null, // null = session vierge non enregistrée
   isGenerating: false,
+  pendingFiles: [], // Pièces jointes prêtes à être envoyées [{ name, mimeType, data }]
   sessions: []
 };
 
-// SVG du Logo Officiel Sunty Gradient
+// SVG Officiel du Logo Sunty Spiral 3D
 const SUNTY_LOGO_SVG = `
   <svg viewBox="0 0 100 100" class="w-full h-full" fill="none">
     <path d="M 72 26 C 72 14, 44 12, 30 24 C 12 38, 18 58, 44 58 C 74 58, 84 76, 68 90 C 50 104, 22 92, 22 78" 
@@ -22,27 +22,27 @@ const SUNTY_LOGO_SVG = `
   </svg>
 `;
 
-// Initialisation au chargement du DOM
+// Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadSessionsFromStorage();
   initMarked();
+  setupFileUploadListener();
   renderRecentsList();
 
   if (state.sessions.length > 0) {
     loadSession(state.sessions[0].id);
   } else {
-    startNewChat(false);
+    renderWelcomeHero();
   }
 
-  // Initialisation des icônes Lucide
   if (window.lucide) {
     lucide.createIcons();
   }
 });
 
 // ============================================================================
-// 1. GESTION DES SESSIONS & LOCALSTORAGE
+// 1. GESTION DES SESSIONS & LOCALSTORAGE (STYLE GEMINI/CHATGPT)
 // ============================================================================
 
 function loadSessionsFromStorage() {
@@ -65,35 +65,32 @@ function saveSessionsToStorage() {
 }
 
 function getCurrentSession() {
+  if (!state.currentSessionId) return null;
   return state.sessions.find(s => s.id === state.currentSessionId);
 }
 
+/**
+ * Démarre un nouveau chat :
+ * Ouvre simplement une vue vierge SANS créer d'entrée dans les discussions récentes !
+ */
 function startNewChat(notify = true) {
   if (state.isGenerating) return;
 
-  const newId = 'session_' + Date.now();
-  const newSession = {
-    id: newId,
-    title: 'Nouvelle discussion',
-    createdAt: Date.now(),
-    model: state.activeModel,
-    messages: []
-  };
+  state.currentSessionId = null;
+  clearPendingFiles();
 
-  state.sessions.unshift(newSession);
-  state.currentSessionId = newId;
-  saveSessionsToStorage();
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
 
-  renderWelcomeScreen();
+  renderWelcomeHero();
   renderRecentsList();
 
   if (notify) {
-    showToast('Nouvelle discussion démarrée');
+    showToast('Nouvelle discussion prête');
   }
-
-  // Focus sur l'input
-  const input = document.getElementById('chat-input');
-  if (input) input.focus();
 }
 
 function loadSession(sessionId) {
@@ -103,18 +100,17 @@ function loadSession(sessionId) {
   if (!session) return;
 
   state.currentSessionId = sessionId;
-  state.activeModel = session.model || state.activeModel;
-  updateActiveModelUI(state.activeModel);
+  clearPendingFiles();
 
   const container = document.getElementById('main-content-view');
   container.innerHTML = '';
 
   if (!session.messages || session.messages.length === 0) {
-    renderWelcomeScreen();
+    renderWelcomeHero();
   } else {
     session.messages.forEach(msg => {
       if (msg.role === 'user') {
-        appendUserMessageToDOM(msg.content, false);
+        appendUserMessageToDOM(msg.content, msg.files || [], false);
       } else {
         appendAIMessageToDOM(msg.content, false);
       }
@@ -156,7 +152,7 @@ function renderRecentsList() {
 
   if (state.sessions.length === 0) {
     recentsContainer.innerHTML = `
-      <div class="px-3 py-2 text-[11px] text-slate-500 italic">
+      <div class="px-3 py-3 text-[11px] text-slate-500 italic">
         Aucune discussion récente
       </div>
     `;
@@ -169,17 +165,17 @@ function renderRecentsList() {
       <div onclick="loadSession('${session.id}')" 
            class="group flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition ${
              isActive 
-               ? 'bg-white/15 text-cyan-300 font-semibold border border-cyan-400/30 shadow-[0_0_12px_rgba(0,240,255,0.15)]' 
-               : 'text-slate-300 hover:bg-white/5 hover:text-white'
+               ? 'bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-400/40 shadow-[0_0_15px_rgba(0,240,255,0.15)]' 
+               : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
            }">
-        <div class="flex items-center gap-2 truncate pr-1">
-          <i data-lucide="message-square" class="w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-400'}"></i>
+        <div class="flex items-center gap-2.5 truncate pr-1">
+          <span class="w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]' : 'bg-slate-600'}"></span>
           <span class="truncate">${escapeHTML(session.title)}</span>
         </div>
         <button onclick="deleteSession('${session.id}', event)" 
                 title="Supprimer la discussion"
                 class="opacity-0 group-hover:opacity-100 hover:text-rose-400 p-1 rounded transition shrink-0">
-          <i data-lucide="trash-2" class="w-3 h-3"></i>
+          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
         </button>
       </div>
     `;
@@ -191,78 +187,96 @@ function renderRecentsList() {
 }
 
 // ============================================================================
-// 2. RENDU MARKDOWN & COLORATION SYNTAXIQUE
+// 2. GESTION DES FICHIERS & MULTIMODALITÉ
 // ============================================================================
 
-function initMarked() {
-  if (window.marked) {
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-      highlight: function(code, lang) {
-        if (window.hljs) {
-          const validLang = hljs.getLanguage(lang) ? lang : 'plaintext';
-          return hljs.highlight(code, { language: validLang }).value;
-        }
-        return code;
+function setupFileUploadListener() {
+  const fileInput = document.getElementById('file-input');
+  if (!fileInput) return;
+
+  fileInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        showToast(`Fichier trop lourd : ${file.name} (max 10 Mo)`);
+        continue;
       }
-    });
-  }
+
+      try {
+        const base64Data = await readFileAsBase64(file);
+        state.pendingFiles.push({
+          name: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          data: base64Data
+        });
+      } catch (err) {
+        showToast('Erreur de lecture du fichier');
+      }
+    }
+
+    fileInput.value = '';
+    renderFilePreview();
+  });
 }
 
-function parseMarkdown(text) {
-  if (!window.marked) return escapeHTML(text);
+function triggerFileUpload() {
+  const fileInput = document.getElementById('file-input');
+  if (fileInput) fileInput.click();
+}
 
-  let rawHTML = marked.parse(text);
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
-  // Remplacement des balises <pre><code> par notre composant stylisé avec bouton copier
-  rawHTML = rawHTML.replace(/<pre><code class="language-([a-zA-Z0-9_\-]+)">([\s\S]*?)<\/code><\/pre>/g, (match, lang, codeContent) => {
-    const rawCode = decodeHTMLEntities(codeContent.replace(/<[^>]*>?/gm, ''));
-    const encodedRawCode = encodeURIComponent(rawCode);
+function renderFilePreview() {
+  const container = document.getElementById('file-preview-container');
+  if (!container) return;
+
+  if (state.pendingFiles.length === 0) {
+    container.classList.add('hidden');
+    container.innerHTML = '';
+    return;
+  }
+
+  container.classList.remove('hidden');
+  container.innerHTML = state.pendingFiles.map((file, idx) => {
+    const isImage = file.mimeType.startsWith('image/');
     return `
-      <div class="code-block-wrapper">
-        <div class="code-header">
-          <span class="font-mono text-cyan-400 uppercase text-[11px] font-bold">${escapeHTML(lang)}</span>
-          <button onclick="copyCode(this, '${encodedRawCode}')" class="copy-code-btn">
-            <i data-lucide="copy" class="w-3 h-3"></i>
-            <span>Copier</span>
-          </button>
-        </div>
-        <pre><code class="hljs language-${lang}">${codeContent}</code></pre>
+      <div class="attachment-chip flex items-center gap-2">
+        ${isImage 
+          ? `<img src="${file.data}" class="w-6 h-6 rounded object-cover border border-cyan-400/40" />`
+          : `<i data-lucide="file-text" class="w-4 h-4 text-cyan-400"></i>`
+        }
+        <span class="max-w-[140px] truncate text-[11px] font-medium">${escapeHTML(file.name)}</span>
+        <button type="button" onclick="removePendingFile(${idx})" class="hover:text-rose-400 p-0.5 rounded transition">
+          <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
       </div>
     `;
-  });
+  }).join('');
 
-  // Nettoyage de sécurité XSS via DOMPurify si présent
-  if (window.DOMPurify) {
-    return DOMPurify.sanitize(rawHTML, {
-      ADD_ATTR: ['target', 'onclick', 'data-lucide']
-    });
-  }
-
-  return rawHTML;
+  if (window.lucide) lucide.createIcons();
 }
 
-function copyCode(btnElement, encodedCode) {
-  const code = decodeURIComponent(encodedCode);
-  navigator.clipboard.writeText(code).then(() => {
-    const originalHTML = btnElement.innerHTML;
-    btnElement.innerHTML = `
-      <i data-lucide="check" class="w-3 h-3 text-emerald-400"></i>
-      <span class="text-emerald-400">Copié !</span>
-    `;
-    if (window.lucide) lucide.createIcons();
-    setTimeout(() => {
-      btnElement.innerHTML = originalHTML;
-      if (window.lucide) lucide.createIcons();
-    }, 2000);
-  }).catch(() => {
-    showToast('Erreur lors de la copie du code');
-  });
+function removePendingFile(index) {
+  state.pendingFiles.splice(index, 1);
+  renderFilePreview();
+}
+
+function clearPendingFiles() {
+  state.pendingFiles = [];
+  renderFilePreview();
 }
 
 // ============================================================================
-// 3. SOUMISSION DU CHAT & STREAMING SSE EN DIRECT
+// 3. ENVOI DE MESSAGES & STREAMING SSE AVEC SUNTYAI 1.0
 // ============================================================================
 
 async function handleChatSubmit(e) {
@@ -270,37 +284,44 @@ async function handleChatSubmit(e) {
 
   const input = document.getElementById('chat-input');
   const message = input.value.trim();
-  if (!message || state.isGenerating) return;
+  const filesToSend = [...state.pendingFiles];
+
+  if ((!message && filesToSend.length === 0) || state.isGenerating) return;
 
   input.value = '';
+  clearPendingFiles();
   state.isGenerating = true;
   toggleInputState(true);
 
-  // S'assurer qu'une session existe
+  // Si c'est le tout premier message, on crée officiellement la session
   let session = getCurrentSession();
   if (!session) {
-    startNewChat(false);
-    session = getCurrentSession();
-  }
-
-  // Renommer la session au premier message
-  if (session.messages.length === 0) {
-    session.title = message.length > 32 ? message.substring(0, 32) + '...' : message;
+    const newId = 'session_' + Date.now();
+    const titleText = message || filesToSend[0]?.name || 'Nouvelle discussion';
+    session = {
+      id: newId,
+      title: titleText.length > 35 ? titleText.substring(0, 35) + '...' : titleText,
+      createdAt: Date.now(),
+      messages: []
+    };
+    state.sessions.unshift(session);
+    state.currentSessionId = newId;
     saveSessionsToStorage();
   }
 
-  // Sauvegarde du message utilisateur
+  // Sauvegarde du message utilisateur dans la session
   session.messages.push({
     role: 'user',
     content: message,
+    files: filesToSend,
     timestamp: Date.now()
   });
   saveSessionsToStorage();
 
-  // Affichage du message utilisateur
-  appendUserMessageToDOM(message, true);
+  // Affichage du message utilisateur dans le DOM
+  appendUserMessageToDOM(message, filesToSend, true);
 
-  // Préparation du conteneur de réponse IA
+  // Préparation du conteneur de réponse SuntyAI 1.0
   const aiMessageElement = createAIMessageElement();
   const contentBody = aiMessageElement.querySelector('.ai-markdown-content');
   const cursor = aiMessageElement.querySelector('.streaming-cursor');
@@ -308,7 +329,6 @@ async function handleChatSubmit(e) {
   let accumulatedText = '';
 
   try {
-    // Appel à l'API Serverless sécurisée
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -317,12 +337,12 @@ async function handleChatSubmit(e) {
       body: JSON.stringify({
         message: message,
         messages: session.messages,
-        model: state.activeModel
+        files: filesToSend
       })
     });
 
     if (!response.ok) {
-      let errDetail = 'Erreur lors de la communication avec l\'IA';
+      let errDetail = 'Erreur lors de la communication avec SuntyAI 1.0';
       try {
         const errJson = await response.json();
         errDetail = errJson.error || errDetail;
@@ -354,29 +374,26 @@ async function handleChatSubmit(e) {
           const parsed = JSON.parse(dataStr);
           if (parsed.text) {
             accumulatedText += parsed.text;
-            contentBody.innerHTML = parseMarkdown(accumulatedText);
+            contentBody.innerHTML = formatSuntyMarkdown(accumulatedText);
             scrollToBottom();
           } else if (parsed.error) {
             throw new Error(parsed.error);
           }
-        } catch (errParse) {
-          // Fragment JSON partiel ou non standard
-        }
+        } catch (errParse) {}
       }
     }
 
   } catch (error) {
-    console.error('[SUNTY CLIENT] Erreur de génération:', error);
-    accumulatedText = `⚠️ **Une erreur est survenue :** ${error.message || 'Impossible d\'obtenir une réponse du modèle.'}`;
-    contentBody.innerHTML = parseMarkdown(accumulatedText);
-    showToast('Erreur: ' + (error.message || 'Échec de la requête'));
+    console.error('[SUNTY CLIENT] Erreur:', error);
+    accumulatedText = `⚠️ **Erreur :** ${error.message || 'Impossible d\'obtenir une réponse de SuntyAI 1.0.'}`;
+    contentBody.innerHTML = formatSuntyMarkdown(accumulatedText);
+    showToast('Erreur: ' + (error.message || 'Échec de génération'));
   } finally {
-    // Retrait du curseur de frappe
     if (cursor) cursor.remove();
     state.isGenerating = false;
     toggleInputState(false);
 
-    // Sauvegarde de la réponse dans la session
+    // Sauvegarde de la réponse IA
     session.messages.push({
       role: 'model',
       content: accumulatedText,
@@ -384,73 +401,86 @@ async function handleChatSubmit(e) {
     });
     saveSessionsToStorage();
 
-    // Actualisation des icônes Lucide pour les boutons copier
     if (window.lucide) lucide.createIcons();
     scrollToBottom();
   }
 }
 
-function sendQuickPrompt(promptText) {
+// Pré-remplir le champ de saisie lors d'un clic sur une suggestion (sans bloquer)
+function insertPromptAction(prefixText) {
   const input = document.getElementById('chat-input');
   if (input) {
-    input.value = promptText;
-    handleChatSubmit(new Event('submit'));
+    input.value = prefixText;
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
   }
 }
 
 // ============================================================================
-// 4. ÉLÉMENTS DU DOM & AFFICHAGE DU CHAT
+// 4. RENDU VISUEL & COMPOSANTS SUNTY
 // ============================================================================
 
-function renderWelcomeScreen() {
+function renderWelcomeHero() {
   const container = document.getElementById('main-content-view');
   container.innerHTML = `
-    <div class="glass-card rounded-3xl p-8 md:p-12 text-center space-y-5 fade-in-up max-w-2xl mx-auto shadow-2xl">
-      <div class="w-16 h-16 mx-auto flex items-center justify-center drop-shadow-[0_0_25px_rgba(0,240,255,0.8)] hover:scale-105 transition duration-300">
+    <div class="max-w-2xl mx-auto text-center space-y-6 pt-12 md:pt-20 fade-in-up">
+      
+      <!-- Logo Sunty Ribbon 3D Animé -->
+      <div class="w-20 h-20 mx-auto flex items-center justify-center sunty-logo-glow">
         ${SUNTY_LOGO_SVG}
       </div>
-      <div>
-        <h2 class="text-2xl font-black tracking-tight text-slate-900">Que puis-je faire pour vous aujourd'hui ?</h2>
-        <p class="text-xs text-slate-600 max-w-md mx-auto leading-relaxed mt-2">
-          Sunty combine la puissance des modèles IA de pointe avec une interface moderne, du streaming ultra-fluide et une sécurité renforcée.
+
+      <!-- Titre d'accueil épuré -->
+      <div class="space-y-2">
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-md">
+          Que puis-je faire pour toi aujourd'hui ?
+        </h1>
+        <p class="text-xs text-slate-400 font-medium">
+          SuntyAI 1.0 créé et développé par <span class="text-cyan-400 font-bold">SuntyraXx</span>
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-left">
-        <button onclick="sendQuickPrompt('Explique-moi les avantages d\\'un site IA autonome avec API')" class="glass-widget p-3 rounded-2xl flex items-center gap-3 group text-xs font-semibold text-slate-800">
-          <div class="w-8 h-8 rounded-xl bg-cyan-100 border border-cyan-200 flex items-center justify-center text-cyan-600 shrink-0 group-hover:rotate-6 transition">
-            <i data-lucide="zap" class="w-4 h-4"></i>
-          </div>
-          <span>Pourquoi créer son propre site IA ?</span>
-        </button>
-
-        <button onclick="sendQuickPrompt('Génère un script Python pour analyser des données CSV')" class="glass-widget p-3 rounded-2xl flex items-center gap-3 group text-xs font-semibold text-slate-800">
-          <div class="w-8 h-8 rounded-xl bg-fuchsia-100 border border-fuchsia-200 flex items-center justify-center text-fuchsia-600 shrink-0 group-hover:rotate-6 transition">
-            <i data-lucide="code" class="w-4 h-4"></i>
-          </div>
-          <span>Générer du code Python</span>
-        </button>
-      </div>
     </div>
   `;
 
   if (window.lucide) lucide.createIcons();
 }
 
-function appendUserMessageToDOM(text, isAnimated = true) {
+function appendUserMessageToDOM(text, files = [], isAnimated = true) {
   const container = document.getElementById('main-content-view');
   
-  // Retirer l'écran de bienvenue si présent
-  const welcomeCard = container.querySelector('.text-center');
-  if (welcomeCard) welcomeCard.remove();
+  // Retirer l'écran d'accueil si présent
+  const welcomeHero = container.querySelector('.text-center');
+  if (welcomeHero) welcomeHero.remove();
 
   const userDiv = document.createElement('div');
   userDiv.className = `flex justify-end gap-3 items-start ${isAnimated ? 'fade-in-up' : ''}`;
+
+  let filesHTML = '';
+  if (Array.isArray(files) && files.length > 0) {
+    filesHTML = `
+      <div class="flex flex-wrap gap-2 mb-2">
+        ${files.map(f => {
+          if (f.mimeType && f.mimeType.startsWith('image/')) {
+            return `<img src="${f.data}" class="w-28 h-20 object-cover rounded-xl border border-cyan-400/40 shadow-md" />`;
+          }
+          return `
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-white/20 text-xs text-cyan-200">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span class="truncate max-w-[150px]">${escapeHTML(f.name)}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
   userDiv.innerHTML = `
-    <div class="bg-sky-200/90 backdrop-blur-md text-slate-900 rounded-3xl rounded-tr-sm px-6 py-3.5 max-w-xl text-sm font-medium leading-relaxed border border-sky-300/80 shadow-md">
-      ${escapeHTML(text)}
+    <div class="user-bubble">
+      ${filesHTML}
+      <div>${escapeHTML(text)}</div>
     </div>
-    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-md border border-white/60">
+    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 shadow-md border border-white/40">
       👤
     </div>
   `;
@@ -461,15 +491,15 @@ function appendUserMessageToDOM(text, isAnimated = true) {
 function appendAIMessageToDOM(content, isAnimated = true) {
   const container = document.getElementById('main-content-view');
   const aiDiv = document.createElement('div');
-  aiDiv.className = `glass-card rounded-3xl p-6 md:p-8 space-y-4 ${isAnimated ? 'fade-in-up' : ''}`;
+  aiDiv.className = `glass-card p-6 md:p-8 space-y-4 ${isAnimated ? 'fade-in-up' : ''}`;
   aiDiv.innerHTML = `
     <div class="flex items-start gap-4">
-      <div class="w-8 h-8 flex items-center justify-center shrink-0 drop-shadow-[0_0_10px_rgba(0,240,255,0.6)]">
+      <div class="w-8 h-8 flex items-center justify-center shrink-0 sunty-logo-glow mt-0.5">
         ${SUNTY_LOGO_SVG}
       </div>
-      <div class="space-y-2 pt-0.5 flex-1 overflow-hidden">
+      <div class="space-y-2 flex-1 overflow-hidden">
         <div class="markdown-body">
-          ${parseMarkdown(content)}
+          ${formatSuntyMarkdown(content)}
         </div>
       </div>
     </div>
@@ -480,13 +510,13 @@ function appendAIMessageToDOM(content, isAnimated = true) {
 function createAIMessageElement() {
   const container = document.getElementById('main-content-view');
   const aiDiv = document.createElement('div');
-  aiDiv.className = 'glass-card rounded-3xl p-6 md:p-8 space-y-4 fade-in-up';
+  aiDiv.className = 'glass-card p-6 md:p-8 space-y-4 fade-in-up';
   aiDiv.innerHTML = `
     <div class="flex items-start gap-4">
-      <div class="w-8 h-8 flex items-center justify-center shrink-0 drop-shadow-[0_0_10px_rgba(0,240,255,0.6)] animate-pulse">
+      <div class="w-8 h-8 flex items-center justify-center shrink-0 sunty-logo-glow mt-0.5">
         ${SUNTY_LOGO_SVG}
       </div>
-      <div class="space-y-2 pt-0.5 flex-1 overflow-hidden">
+      <div class="space-y-2 flex-1 overflow-hidden">
         <div class="markdown-body ai-markdown-content inline"></div>
         <span class="streaming-cursor"></span>
       </div>
@@ -495,6 +525,154 @@ function createAIMessageElement() {
   container.appendChild(aiDiv);
   scrollToBottom();
   return aiDiv;
+}
+
+// ============================================================================
+// 5. MARKDOWN, SYNTAX HIGHLIGHTING & MISE EN FORME MAQUETTE
+// ============================================================================
+
+function initMarked() {
+  if (window.marked) {
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      highlight: function(code, lang) {
+        if (window.hljs) {
+          const validLang = hljs.getLanguage(lang) ? lang : 'plaintext';
+          return hljs.highlight(code, { language: validLang }).value;
+        }
+        return code;
+      }
+    });
+  }
+}
+
+function formatSuntyMarkdown(text) {
+  if (!window.marked) return escapeHTML(text);
+
+  let html = marked.parse(text);
+
+  // Remplacement des blocs de code avec en-tête stylisé et bouton Copier
+  html = html.replace(/<pre><code class="language-([a-zA-Z0-9_\-]+)">([\s\S]*?)<\/code><\/pre>/g, (match, lang, codeContent) => {
+    const rawCode = decodeHTMLEntities(codeContent.replace(/<[^>]*>?/gm, ''));
+    const encodedRawCode = encodeURIComponent(rawCode);
+    return `
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span class="font-mono text-cyan-400 uppercase text-[11px] font-bold">${escapeHTML(lang)}</span>
+          <button onclick="copyCode(this, '${encodedRawCode}')" class="copy-code-btn">
+            <i data-lucide="copy" class="w-3 h-3"></i>
+            <span>Copier</span>
+          </button>
+        </div>
+        <pre><code class="hljs language-${lang}">${codeContent}</code></pre>
+      </div>
+    `;
+  });
+
+  // Mise en valeur de la section "En résumé" sous forme de carte élégante comme sur la maquette
+  html = html.replace(/<blockquote>\s*<p>\s*<strong>En résumé :<\/strong>([\s\S]*?)<\/p>\s*<\/blockquote>/gi, (match, summaryText) => {
+    const cleanText = summaryText.trim();
+    return `
+      <div class="sunty-summary-card">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 flex items-center justify-center shrink-0 drop-shadow-[0_0_8px_rgba(0,240,255,0.7)]">
+            ${SUNTY_LOGO_SVG}
+          </div>
+          <p class="text-xs font-semibold text-slate-200 leading-relaxed">
+            <span class="text-cyan-300 font-bold">En résumé :</span> ${cleanText}
+          </p>
+        </div>
+        <button onclick="copySummary(this, '${encodeURIComponent(cleanText)}')" title="Copier le résumé" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-slate-200 hover:text-white transition shrink-0 active:scale-95">
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    `;
+  });
+
+  // Nettoyage XSS via DOMPurify
+  if (window.DOMPurify) {
+    return DOMPurify.sanitize(html, {
+      ADD_ATTR: ['target', 'onclick', 'data-lucide']
+    });
+  }
+
+  return html;
+}
+
+function copyCode(btnElement, encodedCode) {
+  const code = decodeURIComponent(encodedCode);
+  navigator.clipboard.writeText(code).then(() => {
+    const originalHTML = btnElement.innerHTML;
+    btnElement.innerHTML = `
+      <i data-lucide="check" class="w-3 h-3 text-emerald-400"></i>
+      <span class="text-emerald-400">Copié !</span>
+    `;
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => {
+      btnElement.innerHTML = originalHTML;
+      if (window.lucide) lucide.createIcons();
+    }, 2000);
+  }).catch(() => {
+    showToast('Erreur lors de la copie');
+  });
+}
+
+function copySummary(btnElement, encodedText) {
+  const text = decodeURIComponent(encodedText);
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Résumé copié dans le presse-papier !');
+  });
+}
+
+// ============================================================================
+// 6. THÈME, OUTILS & NAVIGATION
+// ============================================================================
+
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+  showToast(isLight ? 'Thème Clair activé' : 'Thème Sombre activé');
+
+  const themeIcon = document.getElementById('theme-toggle-icon');
+  if (themeIcon) {
+    themeIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    const themeIcon = document.getElementById('theme-toggle-icon');
+    if (themeIcon) themeIcon.setAttribute('data-lucide', 'moon');
+  }
+}
+
+function switchTab(e, tabId) {
+  if (e) e.preventDefault();
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('bg-white/10', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
+    item.classList.add('text-slate-400', 'hover:bg-white/5');
+    const indicator = item.querySelector('.bg-cyan-400');
+    if (indicator) indicator.remove();
+  });
+
+  const clicked = e?.currentTarget;
+  if (clicked) {
+    clicked.classList.add('bg-white/10', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
+    clicked.insertAdjacentHTML('afterbegin', '<span class="w-1.5 h-4 bg-cyan-400 rounded-full absolute left-0 shadow-[0_0_8px_#22d3ee]"></span>');
+  }
+
+  if (tabId === 'accueil') {
+    // Si aucune discussion active, hero d'accueil
+    if (!state.currentSessionId) renderWelcomeHero();
+  } else {
+    showToast(`Section ${tabId} activée`);
+  }
 }
 
 function toggleInputState(disabled) {
@@ -522,75 +700,6 @@ function scrollToBottom() {
   }
 }
 
-// ============================================================================
-// 5. GESTION DES MODÈLES & THÈMES
-// ============================================================================
-
-function selectModel(modelName) {
-  state.activeModel = modelName;
-  updateActiveModelUI(modelName);
-
-  const session = getCurrentSession();
-  if (session) {
-    session.model = modelName;
-    saveSessionsToStorage();
-  }
-
-  showToast(`Modèle actif : ${modelName}`);
-}
-
-function updateActiveModelUI(modelName) {
-  document.querySelectorAll('.model-btn').forEach(btn => {
-    btn.classList.remove('border-cyan-400', 'bg-white/90', 'shadow-[0_0_15px_rgba(0,240,255,0.2)]');
-    const badge = btn.querySelector('.active-model-indicator');
-    if (badge) badge.remove();
-  });
-
-  const selected = document.querySelector(`[data-model="${modelName}"]`);
-  if (selected) {
-    selected.classList.add('border-cyan-400', 'bg-white/90', 'shadow-[0_0_15px_rgba(0,240,255,0.2)]');
-    selected.insertAdjacentHTML('beforeend', '<span class="active-model-indicator w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></span>');
-  }
-}
-
-function toggleTheme() {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-  showToast(isDark ? 'Mode Sombre activé' : 'Mode Lumineux activé');
-
-  const themeIcon = document.getElementById('theme-toggle-icon');
-  if (themeIcon) {
-    themeIcon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
-    if (window.lucide) lucide.createIcons();
-  }
-}
-
-function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY);
-  if (saved === 'dark') {
-    document.body.classList.add('dark-mode');
-    const themeIcon = document.getElementById('theme-toggle-icon');
-    if (themeIcon) {
-      themeIcon.setAttribute('data-lucide', 'moon');
-    }
-  }
-}
-
-// ============================================================================
-// 6. MODALES & NOTIFICATIONS
-// ============================================================================
-
-function openProModal() {
-  const modal = document.getElementById('pro-modal');
-  if (modal) modal.classList.remove('hidden');
-}
-
-function closeProModal() {
-  const modal = document.getElementById('pro-modal');
-  if (modal) modal.classList.add('hidden');
-}
-
 function showToast(msg) {
   const toast = document.getElementById('toast');
   const toastMsg = document.getElementById('toast-msg');
@@ -600,40 +709,11 @@ function showToast(msg) {
   toast.classList.remove('translate-y-20', 'opacity-0');
   setTimeout(() => {
     toast.classList.add('translate-y-20', 'opacity-0');
-  }, 2800);
+  }, 2500);
 }
 
-// Navigation par onglets
-function switchTab(e, tabId) {
-  if (e) e.preventDefault();
-
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.classList.remove('bg-white/15', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
-    item.classList.add('text-slate-300', 'hover:bg-white/10');
-    const indicator = item.querySelector('.bg-cyan-400');
-    if (indicator) indicator.remove();
-  });
-
-  const clicked = e?.currentTarget;
-  if (clicked) {
-    clicked.classList.add('bg-white/15', 'text-white', 'border', 'border-cyan-400/30', 'shadow-[0_0_15px_rgba(0,240,255,0.15)]');
-    clicked.insertAdjacentHTML('afterbegin', '<span class="w-1.5 h-5 bg-cyan-400 rounded-full absolute left-0 shadow-[0_0_8px_#22d3ee]"></span>');
-  }
-
-  if (tabId === 'recents') {
-    showToast(`Historique : ${state.sessions.length} discussions trouvées`);
-  } else if (tabId === 'projets') {
-    showToast('Section Projets (en développement)');
-  } else if (tabId === 'bibliotheque') {
-    showToast('Bibliothèque de prompts et documents');
-  } else {
-    showToast(`Section ${tabId} activée`);
-  }
-}
-
-// Fonctions utilitaires
 function escapeHTML(str) {
-  return String(str).replace(/[&<>'"]/g, 
+  return String(str || '').replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
 }
